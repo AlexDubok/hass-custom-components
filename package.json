@@ -1,0 +1,15 @@
+{
+  "name": "hass-custom-components",
+  "version": "0.0.1",
+  "description": "Home assistant custom components",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "author": "Oleksii Dubok",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
