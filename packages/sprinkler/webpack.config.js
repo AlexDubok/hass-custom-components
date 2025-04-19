@@ -5,27 +5,33 @@ module.exports = {
   entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
+    filename: 'sprinkler-app.js',
     clean: true,
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: {
-          loader: 'ts-loader',
-          options: {
-            compilerOptions: {
-              declaration: false
-            }
-          }
-        },
+        use: 'ts-loader',
         exclude: /node_modules/,
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset/resource',
       },
     ],
   },
   resolve: {
-    extensions: ['.tsx', 'ts', '.js'],
+    extensions: ['.tsx', '.ts', '.js'],
+    alias: {
+      '@components': path.resolve(__dirname, 'src/components'),
+      '@styles': path.resolve(__dirname, 'src/styles'),
+      '@assets': path.resolve(__dirname, 'src/assets'),
+    },
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -36,6 +42,6 @@ module.exports = {
     static: './dist',
     port: 3000,
     open: true,
+    hot: true,
   },
-  mode: 'development',
-};
+}
