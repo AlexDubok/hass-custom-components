@@ -6,24 +6,24 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "webpack serve --mode development",
-    "build": "webpack --mode production",
+    "build": "webpack --mode production --watch",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "lit": "^2.8.0",
-    "home-assistant-js-websocket": "^9.1.0",
-    "apexcharts": "^3.54.1"
+    "apexcharts": "^3.54.1",
+    "home-assistant-js-websocket": "^9.5.0",
+    "lit": "^2.8.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
+    "@types/node": "^20.17.30",
+    "@types/webpack": "^5.28.5",
+    "css-loader": "^6.10.0",
+    "html-webpack-plugin": "^5.6.3",
+    "style-loader": "^3.3.4",
     "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
     "webpack": "^5.99.6",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^4.15.2",
-    "html-webpack-plugin": "^5.6.3",
-    "@types/webpack": "^5.28.5",
-    "@types/node": "^20.17.30",
-    "css-loader": "^6.10.0",
-    "style-loader": "^3.3.4"
+    "webpack-dev-server": "^4.15.2"
   }
 }

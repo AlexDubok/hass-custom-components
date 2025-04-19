@@ -1,6 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { HomeAssistant } from 'home-assistant-js-websocket';
-import ApexCharts from 'apexcharts';
+import { HomeAssistant } from '../../types/homeassistant';
 
 export class HistoryView extends LitElement {
   static properties = {
@@ -19,7 +18,7 @@ export class HistoryView extends LitElement {
     }
   `;
 
-  private chart?: ApexCharts;
+//   private chart?: ApexCharts;
   hass?: HomeAssistant;
   narrow?: boolean;
 

@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { HomeAssistant } from 'home-assistant-js-websocket';
+import { HomeAssistant } from '../../types/homeassistant';
 
 export class StatusDisplay extends LitElement {
   static properties = {
