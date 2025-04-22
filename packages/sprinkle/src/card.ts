@@ -6,23 +6,23 @@ import './containers/watering-container';
 import './components/weather-display';
 // import './components/battery-indicator/battery-indicator';
 import { HomeAssistant } from './types/homeassistant';
-import { SprinklerConfig } from './types/config';
+import { SprinkleConfig } from './types/config';
 import { fireEvent } from './utils/fireEvent';
 import { MoreInfoDialogParams } from './types/lovelace';
 import { customElement, property } from 'lit/decorators.js';
 
 /* eslint no-console: 0 */
 console.info(
-  `%c  SPRINKLE-APP  \n%c Version ${pjson.version} `,
+  `%c  SPRINKLE-CARD  \n%c Version ${pjson.version} `,
   'color: gray; font-weight: bold; background: papayawhip',
   'color: white; font-weight: bold; background: dimgray'
 );
 
-@customElement('sprinkle-app')
-export class SprinklerApp extends LitElement {
+@customElement('sprinkle-card')
+export class SprinkleCard extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
   @property({ type: Boolean }) narrow?: boolean;
-  @property({ attribute: false }) config?: SprinklerConfig;
+  @property({ attribute: false }) config?: SprinkleConfig;
   @property({ type: String }) activeView: string = 'main'; // Default view
   @property({ type: Boolean }) showMoreInfo: boolean = false;
   
@@ -31,7 +31,7 @@ export class SprinklerApp extends LitElement {
     this.activeView = view;
   }
 
-  setConfig(config: SprinklerConfig) {
+  setConfig(config: SprinkleConfig) {
     if (!config) {
       throw new Error('Invalid configuration');
     }

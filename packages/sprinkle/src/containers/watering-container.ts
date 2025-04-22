@@ -3,12 +3,12 @@ import { HomeAssistantService } from '../services/ha-service';
 import { ValveService } from '../services/valve-service';
 import '../components/watering-controls/watering-controls';
 import { HomeAssistant } from '../types/homeassistant';
-import { Mode, SprinklerConfig } from '../types/config';
+import { Mode, SprinkleConfig } from '../types/config';
 import { customElement, property } from 'lit/decorators.js';
 
 @customElement('watering-container')
 export class WateringContainer extends LitElement {
-    @property({ type: Object }) config?: SprinklerConfig;
+    @property({ type: Object }) config?: SprinkleConfig;
     @property({ type: Object }) hass?: HomeAssistant;
     @property({ type: Boolean }) narrow?: boolean;
     @property({ type: Boolean }) isWatering: boolean = false;

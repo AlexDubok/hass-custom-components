@@ -1,4 +1,4 @@
-export interface SprinklerConfig {
+export interface SprinkleConfig {
     entity: string;
     name?: string;
     icon?: string;
