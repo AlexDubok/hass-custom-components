@@ -1,15 +1,17 @@
 {
-  "name": "sprinkler",
+  "name": "sprinkle",
   "version": "1.0.0",
-  "description": "Smart Irrigation Web App's sprinkler functionality",
+  "description": "Smart Irrigation Web App's sprinkle functionality",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "webpack serve --mode development",
-    "build": "webpack --mode production --watch",
+    "build": "webpack --mode production",
+    "build:watch": "webpack --mode production --watch",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@mdi/js": "^7.4.47",
     "apexcharts": "^3.54.1",
     "home-assistant-js-websocket": "^9.5.0",
     "lit": "^2.8.0"

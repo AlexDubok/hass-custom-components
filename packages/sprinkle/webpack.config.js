@@ -2,10 +2,13 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: './src/index.ts',
+  entry: {
+    'sprinkle-app': './src/index.ts',
+    'more-info-sprinkle': './src/more-info-sprinkle.ts'
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'sprinkler-app.js',
+    filename: '[name].js',
     clean: true,
   },
   module: {

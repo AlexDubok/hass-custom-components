@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
+import { customElement } from 'lit/decorators.js';
 
+@customElement('weather-display')
 export class WeatherDisplay extends LitElement {
   static styles = css`
     .weather-info {
@@ -17,5 +19,3 @@ export class WeatherDisplay extends LitElement {
     `;
   }
 }
-
-customElements.define('weather-display', WeatherDisplay);
