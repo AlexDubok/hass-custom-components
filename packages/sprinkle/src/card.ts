@@ -1,15 +1,18 @@
 import { LitElement, css, html } from 'lit';
 import * as pjson from '../package.json';
 import './containers/watering-container';
-// import './containers/history-container';
-// import './containers/schedule-container';
 import './components/weather-display';
-// import './components/battery-indicator/battery-indicator';
+import './components/card-mini';
+import './components/themes/light';
 import { HomeAssistant } from './types/homeassistant';
 import { SprinkleConfig } from './types/config';
 import { fireEvent } from './utils/fireEvent';
 import { MoreInfoDialogParams } from './types/lovelace';
 import { customElement, property } from 'lit/decorators.js';
+import { HomeAssistantService } from './services/ha-service';
+import { ValveService } from './services/valve-service';
+import { haService, valveService } from './services/context';
+import { provide } from '@lit/context';
 
 /* eslint no-console: 0 */
 console.info(
@@ -18,18 +21,25 @@ console.info(
   'color: white; font-weight: bold; background: dimgray'
 );
 
+(window as any).customCards = (window as any).customCards || [];
+(window as any).customCards.push({
+  type: 'sprinkle-card',
+  name: 'Sprinkle-Card',
+  preview: false,
+  description: 'A custom card for controlling your irrigation system',
+});
+
 @customElement('sprinkle-card')
 export class SprinkleCard extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
   @property({ type: Boolean }) narrow?: boolean;
   @property({ attribute: false }) config?: SprinkleConfig;
-  @property({ type: String }) activeView: string = 'main'; // Default view
-  @property({ type: Boolean }) showMoreInfo: boolean = false;
-  
 
-  setView(view: string) {
-    this.activeView = view;
-  }
+  @provide({context: haService})
+  haService: HomeAssistantService | null = null;
+  
+  @provide({context: valveService})
+  valveService: ValveService | null = null
 
   setConfig(config: SprinkleConfig) {
     if (!config) {
@@ -38,67 +48,59 @@ export class SprinkleCard extends LitElement {
     this.config = config;
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    this.initializeServices();
+  }
+
+  updated(changedProps: Map<string, any>) {
+    if ((changedProps.has('hass') || changedProps.has('config'))) {
+      this.initializeServices();
+    }
+  }
+
   handleShowMoreInfo() {
     fireEvent(this, 'hass-more-info', {
       entityId: 'switch.smart_water_valve',
     });
   }
 
+  async handleToggleValve() {
+    await this.valveService?.toggleValve();
+  }
+
   render() {
-    // const weatherEntity = this.config?.weather_entity || 'weather.home';
-    // const batteryEntity =
-    //   this.config?.battery_entity || 'sensor.smart_water_valve_battery';
-    // const states = this.hass?.states;
-    // const valveEntity = this.config?.valve_entity;
-    // const valveState = states?.[valveEntity ?? '']?.state;
+    if (!this.hass) {
+      return html`<div>${this.config?.device_name} Loading...</div>`;
+    }
+    if (!this.haService || !this.valveService) {
+      throw new Error(`Services not initialized for ${this.config?.device_name}`);
+    }
+
+    const statusEntity = this.haService.getEntityState(this.config?.status_entity);
+    const valveEntity = this.haService.getEntityState(this.config?.valve_entity);
+    const batteryLevel = valveEntity?.attributes?.battery ?? '';
+
     return html`
-      <div class="header">
-        <div>${this.hass?.states[this.config?.valve_entity ?? '']?.state}</div>
-        <div class="left-section">
-          <h1 class="app-name">Sprinkle containers</h1>
-          <weather-display .hass=${this.hass} .entity=${''}></weather-display>
-
-          <div class="battery-info">🔋</div>
-        </div>
-
-        <button @click="${() => this.handleShowMoreInfo()}">More Info</button>
-      </div>
-
-      <div class="main-content">
-        ${this.activeView === 'main'
-          ? html`<watering-container
-              .hass=${this.hass}
-              .config=${this.config}
-              .narrow=${this.narrow}
-            ></watering-container>`
-          : ''}
-        ${this.activeView === 'schedule'
-          ? ''
-          : //   html`<schedule-container
-            //       .hass=${this.hass}
-            //       .config=${this.config}
-            //     ></schedule-container>`
-            ''}
-        ${this.activeView === 'history'
-          ? ''
-          : //   html`<history-container
-            //       .hass=${this.hass}
-            //       .config=${this.config}
-            //     ></history-container>`
-            ''}
-      </div>
-
-      <div class="footer">
-        <a href="#" class="nav-button" @click=${() => this.setView('schedule')}>
-          <span>📅</span>
-          <span>Schedule</span>
-        </a>
-        <a href="#" class="nav-button" @click=${() => this.setView('history')}>
-          <span>📊</span>
-          <span>History</span>
-        </a>
-      </div>
+      <sprinkle-light-theme>
+        <sprinkle-status-card
+          ?iswaterrunning="${this.valveService?.isValveOn()}"
+          .valveSwitchState="${this.hass.states[this.config?.valve_entity ?? '']?.state}"
+          .title="${this.config?.title ?? ''}"
+          .status="${statusEntity?.state ?? ''}"
+          .batteryLevel="${batteryLevel}"
+          @click="${this.handleShowMoreInfo}"
+          @toggle-valve="${this.handleToggleValve}"
+        ></sprinkle-status-card>
+      </sprinkle-light-theme>
     `;
+  }
+
+  private initializeServices() {
+    if (!this.hass || !this.config) return;
+    
+    this.haService = new HomeAssistantService(this.hass);
+    this.valveService = new ValveService(this.haService, this.config);
   }
 
   static styles = css`
@@ -127,4 +129,3 @@ Battery indicator example:
           ></battery-indicator>
         </div>
 */
-
