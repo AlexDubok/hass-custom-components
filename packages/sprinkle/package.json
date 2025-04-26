@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@lit/context": "^1.1.5",
     "@mdi/js": "^7.4.47",
     "apexcharts": "^3.54.1",
     "home-assistant-js-websocket": "^9.5.0",
