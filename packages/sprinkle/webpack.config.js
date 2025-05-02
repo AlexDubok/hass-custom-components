@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   entry: {
     'sprinkle-card': './src/card.ts',
-    'sprinkle-more-info': './src/more-info-sprinkle.ts'
+    'sprinkle-more-info': './src/sprinkle-more-info.ts'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

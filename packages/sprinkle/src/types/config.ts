@@ -11,7 +11,6 @@ export interface SprinkleConfig {
     auto_close_entity?: string;
     volume_max?: number;
     duration_max?: number;
-    status_entity?: string;
     timed_irrigation_entity?: string;
     quantitative_irrigation_entity?: string;
 }

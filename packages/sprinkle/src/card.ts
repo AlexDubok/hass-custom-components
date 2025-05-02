@@ -8,11 +8,9 @@ import { HomeAssistant } from './types/homeassistant';
 import { SprinkleConfig } from './types/config';
 import { fireEvent } from './utils/fireEvent';
 import { MoreInfoDialogParams } from './types/lovelace';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistantService } from './services/ha-service';
 import { ValveService } from './services/valve-service';
-import { haService, valveService } from './services/context';
-import { provide } from '@lit/context';
 
 /* eslint no-console: 0 */
 console.info(
@@ -35,10 +33,10 @@ export class SprinkleCard extends LitElement {
   @property({ type: Boolean }) narrow?: boolean;
   @property({ attribute: false }) config?: SprinkleConfig;
 
-  @provide({context: haService})
+  @state()
   haService: HomeAssistantService | null = null;
   
-  @provide({context: valveService})
+  @state()
   valveService: ValveService | null = null
 
   setConfig(config: SprinkleConfig) {
@@ -60,8 +58,9 @@ export class SprinkleCard extends LitElement {
   }
 
   handleShowMoreInfo() {
+    console.log('Show more info for', this.config?.valve_entity);
     fireEvent(this, 'hass-more-info', {
-      entityId: 'switch.smart_water_valve',
+      entityId: this.config?.valve_entity ?? '',
     });
   }
 
@@ -77,7 +76,7 @@ export class SprinkleCard extends LitElement {
       throw new Error(`Services not initialized for ${this.config?.device_name}`);
     }
 
-    const statusEntity = this.haService.getEntityState(this.config?.status_entity);
+    const statusEntity = this.haService.getEntityState(this.config?.device_status_entity);
     const valveEntity = this.haService.getEntityState(this.config?.valve_entity);
     const batteryLevel = valveEntity?.attributes?.battery ?? '';
 
