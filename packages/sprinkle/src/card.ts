@@ -32,6 +32,7 @@ export class SprinkleCard extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
   @property({ type: Boolean }) narrow?: boolean;
   @property({ attribute: false }) config?: SprinkleConfig;
+  @property({ attribute: false }) public stateObj?: any;
 
   @state()
   haService: HomeAssistantService | null = null;
@@ -48,6 +49,12 @@ export class SprinkleCard extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    const mainDeviceEntity = this.hass?.states[this.config?.valve_entity ?? ''];
+    this.config = {
+      ...mainDeviceEntity?.attributes as SprinkleConfig,
+      ...this.config,
+      
+    }
     this.initializeServices();
   }
 
@@ -77,8 +84,7 @@ export class SprinkleCard extends LitElement {
     }
 
     const statusEntity = this.haService.getEntityState(this.config?.device_status_entity);
-    const valveEntity = this.haService.getEntityState(this.config?.valve_entity);
-    const batteryLevel = valveEntity?.attributes?.battery ?? '';
+    const batteryLevel = this.valveService.batteryLevel ?? '';
 
     return html`
       <sprinkle-light-theme>
@@ -88,6 +94,7 @@ export class SprinkleCard extends LitElement {
           .title="${this.config?.title ?? ''}"
           .status="${statusEntity?.state ?? ''}"
           .batteryLevel="${batteryLevel}"
+          .flowRate="${this.valveService?.flowRate ?? {}}"
           @click="${this.handleShowMoreInfo}"
           @toggle-valve="${this.handleToggleValve}"
         ></sprinkle-status-card>

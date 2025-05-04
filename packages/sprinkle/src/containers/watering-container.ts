@@ -7,23 +7,27 @@ import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('watering-container')
 export class WateringContainer extends LitElement {
-    @property({ type: Object }) config?: SprinkleConfig;
-    @property({ type: Object }) hass?: HomeAssistant;
-    @property({ type: Object }) valveService!: ValveService;
+  @property({ type: Object }) config?: SprinkleConfig;
+  @property({ type: Object }) hass?: HomeAssistant;
+  @property({ type: Object }) valveService!: ValveService;
 
-    @state() isWatering: boolean = false;
-    @state() duration: number = 0;
-    @state() volume: number = 0;
-    @state() activeMode: Mode = 'duration';
-  
-  handleToggleValve() {
+  @state() isWatering: boolean = false;
+  @state() duration: number = 0;
+  @state() volume: number = 0;
+  @state() activeMode: Mode = 'duration';
+
+  async handleToggleValve() {
     if (this.valveService.isValveOn()) {
-      this.valveService.turnValveOff();
-    } else if (this.activeMode === 'duration') {
-      this.valveService.startTimedWateringOnce(this.duration);
-    } else {
-      this.valveService.startVolumeBasedWateringOnce(this.volume);
+      return await this.valveService.turnValveOff();
     }
+    if (!this[this.activeMode]) {
+      return await this.valveService.toggleValve();
+    }
+    if (this.activeMode === 'duration') {
+      return await this.valveService.startTimedWateringOnce(this.duration * 60);
+    }
+
+    return await this.valveService.startVolumeBasedWateringOnce(this.volume);
   }
 
   handleDurationChange(e: CustomEvent) {

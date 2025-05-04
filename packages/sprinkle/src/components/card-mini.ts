@@ -1,6 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { fireEvent } from '../utils/fireEvent';
+import { FlowRate } from '../services/valve-service';
 
 const iconWaterOn = html`<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -27,6 +28,7 @@ export class SprinkleCardMini extends LitElement {
   @property({ type: String }) title: string = '';
   @property({ type: String }) status: string = '';
   @property({ type: String }) batteryLevel: string = '';
+  @property({ type: Object }) flowRate: FlowRate | null = null;
   @property({ type: Boolean }) isWaterRunning: boolean = false;
 
   handleToggleValve(e: Event) {
@@ -51,17 +53,19 @@ export class SprinkleCardMini extends LitElement {
           </div>
 
           <div class="sprinkle-info">
-            ${this.status &&
-            html`<div class="status">
-              status: <span>${this.status}</span>
-            </div>`}
-
             ${this.batteryLevel &&
             html`<div class="battery">
               battery: <span>${this.batteryLevel}%</span>
             </div>`}
-            
-        
+            ${this.status &&
+            html`<div class="status">status: <span>${this.status}</span></div>`}
+            ${this.flowRate?.state &&
+            html`<div class="battery">
+              flow rate:
+              <span
+                >${this.flowRate.state} ${this.flowRate.unitOfMeasurment}</span
+              >
+            </div>`}
           </div>
         </div>
       </ha-card>
@@ -100,7 +104,6 @@ export class SprinkleCardMini extends LitElement {
       border: 2px solid var(--color-blue);
       color: var(--color-blue);
     }
-
 
     .sprinkle-button.off {
       border: 2px solid var(--color-green);

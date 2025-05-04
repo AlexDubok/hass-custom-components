@@ -1,5 +1,6 @@
-import { SprinkleConfig } from 'types/config';
+import { SprinkleConfig } from '../types/config';
 import { HomeAssistantService } from './ha-service';
+import { HassEntity } from 'home-assistant-js-websocket';
 
 type VolumeBasedWateringParams = {
   currentCount?: number;
@@ -8,11 +9,16 @@ type VolumeBasedWateringParams = {
   irrigationInterval?: number;
 };
 
-type TimedWateringParams = {
+export type TimedWateringParams = {
   currentCount?: number;
   totalNumber?: number;
   durationSeconds: number;
   irrigationInterval?: number;
+};
+
+export type FlowRate = {
+  state: string;
+  unitOfMeasurment: string | undefined;
 };
 
 export class ValveService {
@@ -20,10 +26,30 @@ export class ValveService {
   private valveEntity: string;
   private deviceName: string;
 
+  public status: string | undefined;
+  public onOffState: string | undefined;
+  public batteryLevel: string | undefined;
+  public flowRate: FlowRate | undefined;
+  public weatherEntity: string | undefined;
+  public timedIrrigation: HassEntity | undefined;
+  public quantitativeIrrigation: HassEntity | undefined;
+
   constructor(haService: HomeAssistantService, config: SprinkleConfig) {
     this.haService = haService;
     this.valveEntity = config.valve_entity;
     this.deviceName = config.device_name;
+    const flowEntity = this.haService.getEntityState(config.flow_entity);
+
+    this.status = this.haService.getEntityState(config.device_status_entity)?.state;
+    this.onOffState = this.haService.getEntityState(this.valveEntity)?.state;
+    this.batteryLevel = this.haService.getEntityState(config.battery_entity)?.state;
+    this.flowRate = {
+      state: flowEntity?.state,
+      unitOfMeasurment: flowEntity?.attributes?.unit_of_measurement,
+    };
+    this.timedIrrigation = this.haService.getEntityState(config.timed_irrigation_entity);
+    this.quantitativeIrrigation = this.haService.getEntityState(config.quantitative_irrigation_entity);
+    
   }
 
   isValveOn(): boolean {
@@ -87,9 +113,20 @@ export class ValveService {
    * @returns A promise resolving the result of the MQTT publish call.
    */
   private startTimedWatering({durationSeconds, currentCount, irrigationInterval, totalNumber}: TimedWateringParams): Promise<any> {
+    console.log('start TimedWatering', {
+      topic: `zigbee2mqtt/${this.deviceName}/set`,
+      payload: JSON.stringify({
+        cyclic_timed_irrigation: {
+          current_count: currentCount || 0,
+          total_number: totalNumber || 1,
+          irrigation_duration: durationSeconds,
+          irrigation_interval: irrigationInterval || 0,
+        },
+      }),
+    });
     return this.haService.callService('mqtt', 'publish', {
       topic: `zigbee2mqtt/${this.deviceName}/set`,
-      duration: JSON.stringify({
+      payload: JSON.stringify({
         cyclic_timed_irrigation: {
           current_count: currentCount || 0,
           total_number: totalNumber || 1,
@@ -110,9 +147,20 @@ export class ValveService {
    * @returns A promise resolving the result of the MQTT publish call.
    */
   startVolumeBasedWatering({volumeLiters, currentCount, irrigationInterval, totalNumber}: VolumeBasedWateringParams): Promise<any> {
+    console.log('start VolumeBasedWatering', {
+      topic: `zigbee2mqtt/${this.deviceName}/set`,
+      payload: JSON.stringify({
+        cyclic_quantitative_irrigation: {
+          current_count: currentCount || 0,
+          total_number: totalNumber || 1,
+          irrigation_capacity: volumeLiters,
+          irrigation_interval: irrigationInterval || 0,
+        },
+      }),
+    });
     return this.haService.callService('mqtt', 'publish', {
       topic: `zigbee2mqtt/${this.deviceName}/set`,
-      duration: JSON.stringify({
+      payload: JSON.stringify({
         cyclic_quantitative_irrigation: {
           current_count: currentCount || 0,
           total_number: totalNumber || 1,

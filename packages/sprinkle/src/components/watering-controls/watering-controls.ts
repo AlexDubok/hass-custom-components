@@ -20,7 +20,7 @@ export class WateringControls extends LitElement {
   handleDurationChange(e: CustomEvent) {
     this.dispatchEvent(
       new CustomEvent('duration-change', {
-        detail: { value: e.detail.value },
+        detail: { value: Math.round(+e.detail.value) },
       })
     );
   }
@@ -74,34 +74,41 @@ export class WateringControls extends LitElement {
 
         ${this.activeMode === 'duration'
           ? html`
-              <div>
-                <h3>Watering Duration (minutes)</h3>
-                <watering-slider
-                  min="1"
-                  max="${this.maxDuration}"
-                  value="${this.duration}"
-                  unit="minutes"
-                  @value-change=${this.handleDurationChange}
-                ></watering-slider>
-              </div>
+              <h3>Watering Duration (minutes)</h3>
+              <watering-slider
+                min="0"
+                max="${this.maxDuration}"
+                value="${this.duration}"
+                unit="minutes"
+                @value-change=${this.handleDurationChange}
+              ></watering-slider>
             `
           : html`
-              <div>
-                <h3>Watering Volume (liters)</h3>
-                <watering-slider
-                  min="1"
-                  max="${this.maxVolume}"
-                  value="${this.volume}"
-                  unit="liters"
-                  @value-change=${this.handleVolumeChange}
-                ></watering-slider>
-              </div>
+              <h3>Watering Volume (liters)</h3>
+              <watering-slider
+                min="0"
+                max="${this.maxVolume}"
+                value="${this.volume}"
+                unit="liters"
+                @value-change=${this.handleVolumeChange}
+              ></watering-slider>
             `}
       </div>
     `;
   }
 
   static styles = css`
+    .watering-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-text {
+      margin-block-end: 16px;
+    }
+
     /* Your styles here */
     .control-button {
       width: 100%;
@@ -121,6 +128,7 @@ export class WateringControls extends LitElement {
 
     .tabs {
       display: flex;
+      width: 100%;
       margin-bottom: 16px;
     }
 

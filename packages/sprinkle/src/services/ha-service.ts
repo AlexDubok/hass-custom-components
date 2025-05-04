@@ -1,4 +1,4 @@
-import { HomeAssistant } from "types/homeassistant";
+import { HomeAssistant } from "../types/homeassistant";
 
 // services/ha-service.ts
 export class HomeAssistantService {

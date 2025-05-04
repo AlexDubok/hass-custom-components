@@ -10,7 +10,7 @@
     "moduleResolution": "node",
     "strict": true,
     "sourceMap": true,
-    "declaration": true,
+    "declaration": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
