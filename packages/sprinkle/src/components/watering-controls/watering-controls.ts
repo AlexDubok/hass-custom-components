@@ -9,8 +9,8 @@ export class WateringControls extends LitElement {
   @property({ type: Number }) duration = 0;
   @property({ type: Number }) volume = 0;
   @property({ type: String }) activeMode: Mode = 'duration';
-  @property({ type: Number }) maxDuration = 60;
-  @property({ type: Number }) maxVolume = 100;
+  @property({ type: Number }) maxDuration = 30;
+  @property({ type: Number }) maxVolume = 50;
   @property({ type: String }) unit = 'minutes';
 
   handleToggleClick() {
@@ -72,77 +72,83 @@ export class WateringControls extends LitElement {
           </div>
         </div>
 
-        ${this.activeMode === 'duration'
-          ? html`
-              <h3>Watering Duration (minutes)</h3>
-              <watering-slider
-                min="0"
-                max="${this.maxDuration}"
-                value="${this.duration}"
-                unit="minutes"
-                @value-change=${this.handleDurationChange}
-              ></watering-slider>
-            `
-          : html`
-              <h3>Watering Volume (liters)</h3>
-              <watering-slider
-                min="0"
-                max="${this.maxVolume}"
-                value="${this.volume}"
-                unit="liters"
-                @value-change=${this.handleVolumeChange}
-              ></watering-slider>
-            `}
+        <div class="input-container">
+          ${this.activeMode === 'duration'
+            ? html`
+                <watering-slider
+                  min="0"
+                  max="${this.maxDuration}"
+                  value="${this.duration}"
+                  unit="minutes"
+                  @value-change=${this.handleDurationChange}
+                ></watering-slider>
+              `
+            : html`
+                <watering-slider
+                  min="0"
+                  max="${this.maxVolume}"
+                  value="${this.volume}"
+                  unit="liters"
+                  @value-change=${this.handleVolumeChange}
+                ></watering-slider>
+              `}
+        </div>
       </div>
     `;
   }
 
-  static styles = css`
-    .watering-controls {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+  static get styles() {
+    return css`
+      .watering-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
 
-    .control-text {
-      margin-block-end: 16px;
-    }
+      .control-text {
+        margin-block-end: 16px;
+      }
 
-    /* Your styles here */
-    .control-button {
-      width: 100%;
-      max-width: 300px;
-      padding: 20px;
-      border-radius: 16px;
-      background: white;
-      border: 2px solid var(--primary-color, #03a9f4);
-      cursor: pointer;
-      text-align: center;
-    }
+      /* Your styles here */
+      .control-button {
+        width: 100%;
+        max-width: 300px;
+        padding: 20px;
+        border-radius: 16px;
+        background: white;
+        border: 2px solid var(--primary-color, #03a9f4);
+        cursor: pointer;
+        text-align: center;
+      }
 
-    .control-buttonClass.active {
-      background-color: #4caf50;
-      color: white;
-    }
+      .control-buttonClass.active {
+        background-color: #4caf50;
+        color: white;
+      }
 
-    .tabs {
-      display: flex;
-      width: 100%;
-      margin-bottom: 16px;
-    }
+      .tabs {
+        display: flex;
+        width: 100%;
+        margin-bottom: 16px;
+      }
 
-    .tab {
-      flex: 1;
-      text-align: center;
-      padding: 8px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
+      .tab {
+        flex: 1;
+        text-align: center;
+        padding: 8px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+      }
 
-    .tab.active {
-      border-bottom-color: var(--primary-color, #03a9f4);
-      color: var(--primary-color, #03a9f4);
-    }
-  `;
+      .tab.active {
+        border-bottom-color: var(--primary-color, #03a9f4);
+        color: var(--primary-color, #03a9f4);
+      }
+
+      .input-container {
+        width: 75%;
+      }
+    `;
+  }
 }

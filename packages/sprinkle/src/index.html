@@ -1,11 +1,143 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
     <title>Smart Irrigation Panel</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-    <sprinkle-app></sprinkle-app>
-</body>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+
+  <script>
+    // Improved hass mock
+    const hass = {
+      config: {
+        attributes: {
+          friendly_name: 'Garden Valve 1',
+          device_name: 'Garden Valve 1',
+          weather_entity: 'weather.home',
+          flow_entity: 'sensor.sprinkle_flow_1',
+          device_status_entity: 'sensor.sprinkle_status_1',
+          timed_irrigation_entity: 'switch.sprinkle_timed_1',
+          quantitative_irrigation_entity: 'switch.sprinkle_quantitative_1',
+          volume_max: 50,
+          duration_max: 30,
+          battery_entity: 'sensor.sprinkle_battery_1',
+        },
+        locationName: 'Home',
+        locationLatitude: 37.7749,
+        locationLongitude: -122.4194,
+        countryCode: 'US',
+        countryName: 'United States',
+        unitSystem: {
+          length: 'km',
+          mass: 'kg',
+          temperature: 'C',
+          volume: 'l',
+        },
+        timeZone: 'America/Los_Angeles',
+      },
+      states: {
+        'valve.sprinkle_valve_1': {
+          entity_id: 'valve.sprinkle_valve_1',
+          state: 'on',
+          attributes: {
+            friendly_name: 'Garden Valve 1',
+            device_name: 'Garden Valve 1',
+            weather_entity: 'weather.home',
+            flow_entity: 'sensor.sprinkle_flow_1',
+            device_status_entity: 'sensor.sprinkle_status_1',
+            timed_irrigation_entity: 'switch.sprinkle_timed_1',
+            quantitative_irrigation_entity: 'switch.sprinkle_quantitative_1',
+            volume_max: 50,
+            duration_max: 30,
+            battery_entity: 'sensor.sprinkle_battery_1',
+          },
+          last_changed: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+        },
+        'weather.home': {
+          entity_id: 'weather.home',
+          state: 'sunny',
+          attributes: {
+            temperature: 22,
+            humidity: 55,
+            wind_speed: 5,
+            friendly_name: 'Home Weather',
+          },
+          last_changed: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+        },
+        'sensor.sprinkle_flow_1': {
+          entity_id: 'sensor.sprinkle_flow_1',
+          state: '12.5',
+          attributes: {
+            unit_of_measurement: 'L/min',
+            friendly_name: 'Sprinkle Flow',
+          },
+          last_changed: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+        },
+        'sensor.sprinkle_status_1': {
+          entity_id: 'sensor.sprinkle_status_1',
+          state: 'ok',
+          attributes: {
+            friendly_name: 'Sprinkle Status',
+          },
+          last_changed: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+        },
+        'switch.sprinkle_timed_1': {
+          entity_id: 'switch.sprinkle_timed_1',
+          state: 'off',
+          attributes: {
+            friendly_name: 'Timed Irrigation',
+          },
+          last_changed: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+        },
+        'switch.sprinkle_quantitative_1': {
+          entity_id: 'switch.sprinkle_quantitative_1',
+          state: 'on',
+          attributes: {
+            friendly_name: 'Quantitative Irrigation',
+          },
+          last_changed: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+        },
+        'sensor.sprinkle_battery_1': {
+          entity_id: 'sensor.sprinkle_battery_1',
+          state: '87',
+          attributes: {
+            unit_of_measurement: '%',
+            friendly_name: 'Sprinkle Battery',
+          },
+          last_changed: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+        },
+      },
+      // Add minimal mock for callService if needed by services
+      callService: (domain, service, data) => {
+        console.log(`Mock callService: ${domain}.${service}`, data);
+      },
+    };
+
+    // Mocked stateObj for Sprinkle
+    const stateObj = hass.config;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const hassElement = document.querySelector('sprinkle-more-info');
+      if (hassElement) {
+        hassElement.hass = hass;
+        hassElement.stateObj = stateObj;
+      }
+    });
+    const hassElement = document.querySelector('sprinkle-more-info');
+    if (hassElement) {
+      hassElement.hass = hass;
+      hassElement.stateObj = stateObj;
+    }
+  </script>
+
+  <body>
+    <sprinkle-more-info></sprinkle-more-info>
+  </body>
 </html>

@@ -1,5 +1,5 @@
 import { LitElement, css, html } from 'lit';
-import * as pjson from '../package.json';
+import pjson from '../package.json';
 import './containers/watering-container';
 import './components/weather-display';
 import './components/card-mini';
@@ -27,6 +27,8 @@ console.info(
   description: 'A custom card for controlling your irrigation system',
 });
 
+
+// TODO: Chackbox-button-switcher
 @customElement('sprinkle-card')
 export class SprinkleCard extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
@@ -41,6 +43,7 @@ export class SprinkleCard extends LitElement {
   valveService: ValveService | null = null
 
   setConfig(config: SprinkleConfig) {
+    console.log('Config', config);
     if (!config) {
       throw new Error('Invalid configuration');
     }
@@ -65,7 +68,6 @@ export class SprinkleCard extends LitElement {
   }
 
   handleShowMoreInfo() {
-    console.log('Show more info for', this.config?.valve_entity);
     fireEvent(this, 'hass-more-info', {
       entityId: this.config?.valve_entity ?? '',
     });
@@ -125,13 +127,3 @@ declare global {
     'hass-more-info': MoreInfoDialogParams;
   }
 }
-
-/* 
-Battery indicator example:
- <div class="battery-info">
-          <battery-indicator
-            .hass=${this.hass}
-            .entity=${batteryEntity}
-          ></battery-indicator>
-        </div>
-*/

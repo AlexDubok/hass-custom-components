@@ -25,6 +25,7 @@ export class MoreInfoSprinkle extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     const { attributes } = this.stateObj ?? {};
+
     this.config = {
       device_name: attributes?.device_name,
       valve_entity: this.stateObj?.entity_id,
@@ -82,7 +83,7 @@ export class MoreInfoSprinkle extends LitElement {
       <div class="status">
         <div class="status-item">
           <span>💧</span>
-          <pre>${JSON.stringify({
+          <pre class="debug">${JSON.stringify({
             onOffState:  this.valveService?.onOffState,
             status: this.valveService?.status,
             batteryLevel: `${this.valveService?.batteryLevel} %`,
@@ -118,6 +119,11 @@ export class MoreInfoSprinkle extends LitElement {
       display: flex;
       justify-content: space-between;
       margin-block-end: 16px;
+    }
+
+    .debug {
+      width: 100%;
+      overflow: scroll;
     }
   `;
 }

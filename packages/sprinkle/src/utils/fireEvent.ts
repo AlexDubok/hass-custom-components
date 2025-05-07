@@ -8,6 +8,15 @@ export interface HASSDomEvent<T> extends Event {
   payload: T;
 }
 
+export type HapticType =
+	| 'success'
+	| 'warning'
+	| 'failure'
+	| 'light'
+	| 'medium'
+	| 'heavy'
+	| 'selection';
+
 export const fireEvent = <HassEvent extends ValidHassDomEvent>(
     node: HTMLElement | Window,
     type: HassEvent,
@@ -31,3 +40,12 @@ export const fireEvent = <HassEvent extends ValidHassDomEvent>(
     return event;
   };
   
+export const fireHapticEvent = (haptic: HapticType) => {
+  const event = new Event('haptic', {
+    bubbles: true,
+    composed: true,
+  });
+  // @ts-ignore
+  event.detail = haptic;
+  window.dispatchEvent(event);
+};
