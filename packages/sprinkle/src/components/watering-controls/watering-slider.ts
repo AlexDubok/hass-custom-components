@@ -16,15 +16,7 @@ export class WateringSlider extends LitElement {
   private sliderInput?: HTMLInputElement;
   
   firstUpdated() {
-    // Get reference to the slider input
     this.sliderInput = this.shadowRoot?.querySelector('input.range') as HTMLInputElement;
-    
-    // if (this.sliderInput) {
-    //   // Add touch event listeners for mobile devices
-    //   this.sliderInput.addEventListener('touchstart', this.handleTouchStart.bind(this));
-    //   this.sliderInput.addEventListener('touchmove', this.handleTouchMove.bind(this));
-    //   this.sliderInput.addEventListener('touchend', this.handleTouchEnd.bind(this));
-    // }
   }
   
   handleSliderChange(e: Event) {
@@ -63,7 +55,7 @@ export class WateringSlider extends LitElement {
   }
   
   handleTouchMove(e: TouchEvent) {
-    e.preventDefault(); // Prevent scrolling while touching the slider
+    e.preventDefault();
     const touch = e.touches[0];
     const newValue = this.calculateValueFromTouch(touch);
     
@@ -101,8 +93,6 @@ export class WateringSlider extends LitElement {
   render() {
     return html`
       <div class="slider-container">
-        <div class="value-display"><span class="value-label">${this.value.toFixed(1)}</span> ${this.unit}</div>
-
         <input
           type="range"
           class="range ${this.value === this.min ? 'minimum' : ''}"
@@ -119,30 +109,15 @@ export class WateringSlider extends LitElement {
       </div>
     `;
   }
-  
-  // disconnectedCallback() {
-  //   super.disconnectedCallback();
-    
-  //   // Clean up event listeners
-  //   if (this.sliderInput) {
-  //     this.sliderInput.removeEventListener('touchstart', this.handleTouchStart.bind(this));
-  //     this.sliderInput.removeEventListener('touchmove', this.handleTouchMove.bind(this));
-  //     this.sliderInput.removeEventListener('touchend', this.handleTouchEnd.bind(this));
-  //   }
-  // }
 
   static styles = css`
     :host {
       display: block;
       width: 100%;
-      --text-color: #f9f9f9;
-      --blue: oklch(0.58 0.22 259.05);
-      --blue-rgb: 8, 112, 248;
       --input-size: 70px;
       --range-border: transparent;
       --range-bg: rgba(0, 0, 0, 0.1);
-      /* --thumb-bg: #0870f8; */
-      --thumb-bg: purple;
+      --thumb-bg: #0870f8;
     }
 
     .slider-container {
@@ -214,19 +189,6 @@ export class WateringSlider extends LitElement {
     
     .range.minimum::-moz-range-thumb {
       background: transparent;
-    }
-
-    .value-display {
-      font-size: 24px;
-      text-align: center;
-      margin: 16px 0;
-      color: #212121;
-    }
-    
-    .value-label {
-      font-size: 32px;
-      font-weight: bold;
-      min-width: 4ch;
     }
   `;
 }

@@ -11,7 +11,6 @@ export class WateringControls extends LitElement {
   @property({ type: String }) activeMode: Mode = 'duration';
   @property({ type: Number }) maxDuration = 30;
   @property({ type: Number }) maxVolume = 50;
-  @property({ type: String }) unit = 'minutes';
 
   handleToggleClick() {
     this.dispatchEvent(new CustomEvent('toggle-valve'));
@@ -20,7 +19,7 @@ export class WateringControls extends LitElement {
   handleDurationChange(e: CustomEvent) {
     this.dispatchEvent(
       new CustomEvent('duration-change', {
-        detail: { value: Math.round(+e.detail.value) },
+        detail: { value: +e.detail.value },
       })
     );
   }
@@ -41,6 +40,18 @@ export class WateringControls extends LitElement {
     );
   }
 
+  get isDuration() {
+    return this.activeMode === 'duration';
+  }
+
+  get currentValue() {
+    return this.isDuration ? this.duration : this.volume;
+  }
+
+  get unit() {
+    return this.isDuration ? 'minutes' : 'liters';
+  }
+
   render() {
     const buttonClass = this.isWatering
       ? 'control-button active'
@@ -59,7 +70,7 @@ export class WateringControls extends LitElement {
 
         <div class="tabs">
           <div
-            class="tab ${this.activeMode === 'duration' ? 'active' : ''}"
+            class="tab ${this.isDuration ? 'active' : ''}"
             @click=${() => this.setMode('duration')}
           >
             Duration
@@ -73,7 +84,12 @@ export class WateringControls extends LitElement {
         </div>
 
         <div class="input-container">
-          ${this.activeMode === 'duration'
+          <div class="value-display">
+            <span class="value-label">${this.currentValue.toFixed(1)}</span>
+            ${this.unit}
+          </div>
+
+          ${this.isDuration
             ? html`
                 <watering-slider
                   min="0"
@@ -148,6 +164,19 @@ export class WateringControls extends LitElement {
 
       .input-container {
         width: 75%;
+      }
+
+      .value-display {
+        font-size: 24px;
+        text-align: center;
+        margin: 16px 0;
+        color: #212121;
+      }
+
+      .value-label {
+        font-size: 32px;
+        font-weight: bold;
+        min-width: 4ch;
       }
     `;
   }
