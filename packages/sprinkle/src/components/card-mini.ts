@@ -1,6 +1,6 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { fireEvent } from '../utils/fireEvent';
+import { fireEvent, fireHapticEvent } from '../utils/fireEvent';
 import { FlowRate } from '../services/valve-service';
 
 const iconWaterOn = html`<svg
@@ -30,22 +30,72 @@ export class SprinkleCardMini extends LitElement {
   @property({ type: String }) batteryLevel: string = '';
   @property({ type: Object }) flowRate: FlowRate | null = null;
   @property({ type: Boolean }) isWaterRunning: boolean = false;
+  
+  // For optimistic UI updates
+  @property({ type: Boolean }) optimisticState: boolean = false;
+  private timeoutId: number | null = null;
+  private static readonly FAIL_TIMEOUT = 5000; // 5 seconds
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up any pending timeouts when component is removed
+    if (this.timeoutId !== null) {
+      window.clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+  }
 
   handleToggleValve(e: Event) {
     e.stopPropagation();
+    
+    // Set optimistic state immediately
+    this.optimisticState = !this.isWaterRunning;
+    
+    // Clear any existing timeout
+    if (this.timeoutId !== null) {
+      window.clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+    
+    // Set timeout to check if state actually changed
+    this.timeoutId = window.setTimeout(() => {
+      // If the actual state doesn't match our optimistic state after timeout,
+      // revert the optimistic state
+      if (this.optimisticState !== this.isWaterRunning) {
+        console.warn('Valve state did not change as expected within timeout period');
+        this.optimisticState = this.isWaterRunning;
+        // Optionally show a toast or notification to the user
+        this.dispatchEvent(new CustomEvent('valve-toggle-failed', {
+          bubbles: true,
+          composed: true,
+          detail: { message: 'Failed to switch valve state' }
+        }));
+        fireHapticEvent('failure');
+        return;
+      }
+      this.timeoutId = null;
+    }, SprinkleCardMini.FAIL_TIMEOUT);
+    
+    // Fire the event to actually toggle the valve
     fireEvent(this, 'toggle-valve');
+    fireHapticEvent('success');
   }
 
   render() {
+    // Use optimisticState if it's set, otherwise use the actual state
+    const displayState = this.timeoutId !== null ? this.optimisticState : this.isWaterRunning;
+    
     return html`
       <ha-card .header=${this.title}>
         <div class="sprinkle-status-card">
           <div class="button-container">
             <button
-              class="sprinkle-button ${this.isWaterRunning ? 'on' : 'off'}"
+              class="sprinkle-button ${displayState ? 'on' : 'off'}"
               @click=${this.handleToggleValve}
+              aria-pressed="${displayState}"
+              role="switch"
             >
-              ${this.isWaterRunning ? iconWaterOn : iconWaterOff}
+              ${displayState ? iconWaterOn : iconWaterOff}
               <div class="wave wave-1"></div>
               <div class="wave wave-2"></div>
             </button>
@@ -163,5 +213,8 @@ declare global {
   interface HASSDomEvents {
     click: {};
     'toggle-valve': {};
+    'valve-toggle-failed': {
+      message: string;
+    };
   }
 }

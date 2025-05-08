@@ -77,6 +77,18 @@ export class SprinkleCard extends LitElement {
     await this.valveService?.toggleValve();
   }
 
+  handleToggleFailed(e: CustomEvent) {
+    // Show a notification to the user
+    if (this.hass) {
+      this.hass.callService('persistent_notification', 'create', {
+        title: 'Sprinkle Card',
+        message: e.detail.message || 'Failed to toggle valve state',
+        notification_id: 'sprinkle-valve-toggle-failed'
+      });
+    }
+    console.error('Valve toggle failed:', e.detail.message);
+  }
+
   render() {
     if (!this.hass) {
       return html`<div>${this.config?.device_name} Loading...</div>`;
@@ -96,9 +108,10 @@ export class SprinkleCard extends LitElement {
           .title="${this.config?.title ?? ''}"
           .status="${statusEntity?.state ?? ''}"
           .batteryLevel="${batteryLevel}"
-          .flowRate="${this.valveService?.flowRate ?? {}}"
+          .flowRate="${this.valveService?.flowRate ?? null}"
           @click="${this.handleShowMoreInfo}"
           @toggle-valve="${this.handleToggleValve}"
+          @valve-toggle-failed="${this.handleToggleFailed}"
         ></sprinkle-status-card>
       </sprinkle-light-theme>
     `;
@@ -125,5 +138,8 @@ declare global {
   // for fire event
   interface HASSDomEvents {
     'hass-more-info': MoreInfoDialogParams;
+    'valve-toggle-failed': {
+      message: string;
+    };
   }
 }
