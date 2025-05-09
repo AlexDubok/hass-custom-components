@@ -4,16 +4,18 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistant } from 'types/homeassistant';
 import { HomeAssistantService } from './services/ha-service';
 import { ValveService } from './services/valve-service';
+import { ConfigRegistry } from './services/SprinkleConfigRegistry';
+import { parsePythonDict } from './utils/parsePythonDict';
 
 /**
  * Custom More Info dialog for Sprinkle irrigation entities
  *
- * @customElement more-info-sprinkle
+ * @customElement sprinkle-more-info
  */
 @customElement('sprinkle-more-info')
 export class MoreInfoSprinkle extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
-  // The entity state object
+  // The entity state object provided by Home Assistant
   @property({ attribute: false }) public stateObj?: any;
 
   @state()
@@ -22,53 +24,56 @@ export class MoreInfoSprinkle extends LitElement {
   @state()
   valveService: ValveService | null = null;
 
+  @state()
+  config: SprinkleConfig | null = null;
+
+  // Reference to the config registry
+  private configRegistry = ConfigRegistry.getInstance();
+
   connectedCallback() {
     super.connectedCallback();
-    const { attributes } = this.stateObj ?? {};
-
-    this.config = {
-      device_name: attributes?.device_name,
-      valve_entity: this.stateObj?.entity_id,
-      weather_entity: attributes?.weather_entity,
-      flow_entity: attributes?.flow_entity,
-      device_status_entity: attributes?.device_status_entity,
-      timed_irrigation_entity: attributes?.timed_irrigation_entity,
-      quantitative_irrigation_entity:
-        attributes?.quantitative_irrigation_entity,
-      volume_max: attributes?.volume_max,
-      duration_max: attributes?.duration_max,
-      battery_entity: attributes?.battery_entity,
-    };
-
-    this.initializeServices();
+    this.loadConfiguration();
   }
 
   updated(changedProps: Map<string, any>) {
+    if (changedProps.has('stateObj')) {
+      this.loadConfiguration();
+    }
+
     if (changedProps.has('hass') || changedProps.has('config')) {
       this.initializeServices();
     }
   }
 
-  config: SprinkleConfig | null = null;
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Cleanup any resources
+    this.valveService = null;
+    this.haService = null;
+  }
 
   render() {
     if (!this.config) {
       return html`<div>Loading...</div>`;
     }
 
+    if (!this.valveService || !this.haService) {
+      return null;
+    }
+
     const timedIrrigation = this.valveService?.timedIrrigation;
     const quantitativeIrrigation = this.valveService?.quantitativeIrrigation;
-  
-    // @ts-ignore
-    window._haas = this.hass;
 
     return html`
       <div class="header">
-        <h1 class="app-name">Custom more info</h1>
+        <h1 class="app-name">${this.config.title || 'Sprinkle'}</h1>
         <div class="left-section">
-          <weather-display .hass=${this.hass} .entity=${''}></weather-display>
+          <weather-display
+            .hass=${this.hass}
+            .entity=${this.config.weather_entity || ''}
+          ></weather-display>
 
-          <div class="battery-info">🔋 ${this.valveService?.batteryLevel}% </div>
+          <div class="battery-info">🔋 ${this.valveService?.batteryLevel}%</div>
         </div>
       </div>
 
@@ -81,30 +86,80 @@ export class MoreInfoSprinkle extends LitElement {
       </div>
 
       <div class="status">
+        <div class="status-record">
+          onOffState: ${this.valveService?.onOffState}
+        </div>
+        <div class="status-record">status: ${this.valveService?.status}</div>
+        <div class="status-record">
+          batteryLevel: ${this.valveService?.batteryLevel}
+        </div>
+        <div class="status-record">
+          flowRate: ${this.valveService?.flowRate?.state}
+          ${this.valveService?.flowRate?.unitOfMeasurment}
+        </div>
+
         <div class="status-item">
-          <span>💧</span>
-          <pre class="debug">${JSON.stringify({
-            onOffState:  this.valveService?.onOffState,
-            status: this.valveService?.status,
-            batteryLevel: `${this.valveService?.batteryLevel} %`,
-            flowRate: `${this.valveService?.flowRate?.state} ${this.valveService?.flowRate?.unitOfMeasurment}`,
-            timedEntity: `${timedIrrigation?.state}. changed: ${new Date(timedIrrigation?.last_changed ?? 0).toLocaleString()} / updated: ${new Date(timedIrrigation?.last_updated ?? 0).toLocaleString()}`,
-            quantitativeEntity: `${quantitativeIrrigation?.state}. changed: ${new Date(quantitativeIrrigation?.last_changed ?? 0).toLocaleString()} / updated: ${new Date(quantitativeIrrigation?.last_updated ?? 0).toLocaleString()}`,
-          }, null, 2)}</pre>
+          <pre class="debug">
+${JSON.stringify(
+              {
+                timedEntity: {
+                  ...parsePythonDict(timedIrrigation?.state),
+                  changed: new Date(
+                    timedIrrigation?.last_changed ?? 0
+                  ).toLocaleString(),
+                  updated: new Date(
+                    timedIrrigation?.last_updated ?? 0
+                  ).toLocaleString(),
+                },
+                quantitativeEntity: {
+                  ...parsePythonDict(quantitativeIrrigation?.state),
+                  changed: new Date(
+                    quantitativeIrrigation?.last_changed ?? 0
+                  ).toLocaleString(),
+                  updated: new Date(
+                    quantitativeIrrigation?.last_updated ?? 0
+                  ).toLocaleString(),
+                },
+              },
+              null,
+              2
+            )}</pre
+          >
         </div>
       </div>
 
       <div class="footer">
-        <!-- <a href="#" class="nav-button" >
-          <span>📅</span>
-          <span>Schedule</span>
-        </a>
-        <a href="#" class="nav-button">
-          <span>📊</span>
-          <span>History</span>
-        </a> -->
+        <!-- Future navigation items will go here -->
       </div>
     `;
+  }
+
+  private loadConfiguration() {
+    if (!this.stateObj) return;
+
+    // Try to get the config from the registry first using entity_id
+    const entityId = this.stateObj.entity_id;
+    if (this.configRegistry.hasConfig(entityId)) {
+      this.config = this.configRegistry.getConfig(entityId) || null;
+    } else {
+      // Fall back to entity attributes if not in the registry
+      const { attributes } = this.stateObj;
+      this.config = {
+        device_name: attributes?.device_name,
+        valve_entity: this.stateObj?.entity_id,
+        weather_entity: attributes?.weather_entity,
+        flow_entity: attributes?.flow_entity,
+        device_status_entity: attributes?.device_status_entity,
+        timed_irrigation_entity: attributes?.timed_irrigation_entity,
+        quantitative_irrigation_entity:
+          attributes?.quantitative_irrigation_entity,
+        volume_max: attributes?.volume_max,
+        duration_max: attributes?.duration_max,
+        battery_entity: attributes?.battery_entity,
+      };
+    }
+
+    this.initializeServices();
   }
 
   private initializeServices() {
@@ -118,12 +173,17 @@ export class MoreInfoSprinkle extends LitElement {
     .left-section {
       display: flex;
       justify-content: space-between;
-      margin-block-end: 16px;
+      margin-block-end: 32px;
     }
 
     .debug {
       width: 100%;
       overflow: scroll;
+    }
+
+    .app-name {
+      margin-top: 0;
+      font-size: 1.5rem;
     }
   `;
 }

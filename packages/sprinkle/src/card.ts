@@ -1,5 +1,4 @@
 import { LitElement, css, html } from 'lit';
-import pjson from '../package.json';
 import './containers/watering-container';
 import './components/weather-display';
 import './components/card-mini';
@@ -11,24 +10,8 @@ import { MoreInfoDialogParams } from './types/lovelace';
 import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistantService } from './services/ha-service';
 import { ValveService } from './services/valve-service';
+import { ConfigRegistry } from './services/SprinkleConfigRegistry';
 
-/* eslint no-console: 0 */
-console.info(
-  `%c  SPRINKLE-CARD  \n%c Version ${pjson.version} `,
-  'color: gray; font-weight: bold; background: papayawhip',
-  'color: white; font-weight: bold; background: dimgray'
-);
-
-(window as any).customCards = (window as any).customCards || [];
-(window as any).customCards.push({
-  type: 'sprinkle-card',
-  name: 'Sprinkle-Card',
-  preview: false,
-  description: 'A custom card for controlling your irrigation system',
-});
-
-
-// TODO: Chackbox-button-switcher
 @customElement('sprinkle-card')
 export class SprinkleCard extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
@@ -42,23 +25,42 @@ export class SprinkleCard extends LitElement {
   @state()
   valveService: ValveService | null = null
 
+  private configRegistry = ConfigRegistry.getInstance();
+
   setConfig(config: SprinkleConfig) {
-    console.log('Config', config);
     if (!config) {
       throw new Error('Invalid configuration');
     }
+    
+    if (config.valve_entity) {
+      this.configRegistry.setConfig(config.valve_entity, config);
+    }
+    
     this.config = config;
   }
 
   connectedCallback() {
     super.connectedCallback();
     const mainDeviceEntity = this.hass?.states[this.config?.valve_entity ?? ''];
+    
     this.config = {
       ...mainDeviceEntity?.attributes as SprinkleConfig,
       ...this.config,
-      
+    };
+    
+    if (this.config?.valve_entity) {
+      this.configRegistry.setConfig(this.config.valve_entity, this.config);
     }
+    
     this.initializeServices();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    
+    if (this.config?.valve_entity) {
+      this.configRegistry.deleteConfig(this.config.valve_entity);
+    }
   }
 
   updated(changedProps: Map<string, any>) {
@@ -68,8 +70,12 @@ export class SprinkleCard extends LitElement {
   }
 
   handleShowMoreInfo() {
+    if (!this.config?.valve_entity) {
+      return;
+    }
+    
     fireEvent(this, 'hass-more-info', {
-      entityId: this.config?.valve_entity ?? '',
+      entityId: this.config.valve_entity,
     });
   }
 
@@ -78,7 +84,6 @@ export class SprinkleCard extends LitElement {
   }
 
   handleToggleFailed(e: CustomEvent) {
-    // Show a notification to the user
     if (this.hass) {
       this.hass.callService('persistent_notification', 'create', {
         title: 'Sprinkle Card',
@@ -135,7 +140,6 @@ export class SprinkleCard extends LitElement {
 }
 
 declare global {
-  // for fire event
   interface HASSDomEvents {
     'hass-more-info': MoreInfoDialogParams;
     'valve-toggle-failed': {

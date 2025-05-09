@@ -3,12 +3,16 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: {
-    'sprinkle-card': './src/card.ts',
-    'sprinkle-more-info': './src/sprinkle-more-info.ts'
+    'sprinkle': './src/sprinkle.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
+    library: {
+      name: 'Sprinkle',
+      type: 'umd',
+      export: ['SprinkleCard', 'MoreInfoSprinkle'],
+    },
     clean: true,
   },
   module: {

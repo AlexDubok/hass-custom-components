@@ -1,0 +1,23 @@
+/**
+ * Converts a Python-style dictionary string to valid JSON
+ * @param pythonDict - String representation of a Python dictionary
+ * @returns Parsed JavaScript object
+ */
+export function parsePythonDict(pythonDict: string = '{}'): any {
+  if (!pythonDict) return {};
+
+  try {
+    // Replace single quotes with double quotes
+    const jsonString = pythonDict
+      .replace(/'/g, '"')
+      // Handle any other Python-specific syntax if needed
+      .replace(/None/g, 'null')
+      .replace(/True/g, 'true')
+      .replace(/False/g, 'false');
+
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error('Error parsing Python dictionary:', error);
+    return {};
+  }
+}
