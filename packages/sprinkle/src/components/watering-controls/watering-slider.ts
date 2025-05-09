@@ -117,7 +117,7 @@ export class WateringSlider extends LitElement {
       --input-size: 70px;
       --range-border: transparent;
       --range-bg: rgba(0, 0, 0, 0.1);
-      --thumb-bg: #0870f8;
+      --thumb-bg: var(--water-color);
     }
 
     .slider-container {

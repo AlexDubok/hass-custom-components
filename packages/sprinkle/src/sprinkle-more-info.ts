@@ -65,72 +65,76 @@ export class MoreInfoSprinkle extends LitElement {
     const quantitativeIrrigation = this.valveService?.quantitativeIrrigation;
 
     return html`
-      <div class="header">
-        <h1 class="app-name">${this.config.title || 'Sprinkle'}</h1>
-        <div class="left-section">
-          <weather-display
+      <sprinkle-light-theme>
+        <div class="header">
+          <h1 class="app-name">${this.config.title || 'Sprinkle'}</h1>
+          <div class="left-section">
+            <weather-display
+              .hass=${this.hass}
+              .entity=${this.config.weather_entity || ''}
+            ></weather-display>
+
+            <div class="battery-info">
+              🔋 ${this.valveService?.batteryLevel}%
+            </div>
+          </div>
+        </div>
+
+        <div class="main-content">
+          <watering-container
             .hass=${this.hass}
-            .entity=${this.config.weather_entity || ''}
-          ></weather-display>
-
-          <div class="battery-info">🔋 ${this.valveService?.batteryLevel}%</div>
-        </div>
-      </div>
-
-      <div class="main-content">
-        <watering-container
-          .hass=${this.hass}
-          .config=${this.config}
-          .valveService=${this.valveService as ValveService}
-        ></watering-container>
-      </div>
-
-      <div class="status">
-        <div class="status-record">
-          onOffState: ${this.valveService?.onOffState}
-        </div>
-        <div class="status-record">status: ${this.valveService?.status}</div>
-        <div class="status-record">
-          batteryLevel: ${this.valveService?.batteryLevel}
-        </div>
-        <div class="status-record">
-          flowRate: ${this.valveService?.flowRate?.state}
-          ${this.valveService?.flowRate?.unitOfMeasurment}
+            .config=${this.config}
+            .valveService=${this.valveService as ValveService}
+          ></watering-container>
         </div>
 
-        <div class="status-item">
-          <pre class="debug">
+        <div class="status">
+          <div class="status-record">
+            onOffState: ${this.valveService?.onOffState}
+          </div>
+          <div class="status-record">status: ${this.valveService?.status}</div>
+          <div class="status-record">
+            batteryLevel: ${this.valveService?.batteryLevel}
+          </div>
+          <div class="status-record">
+            flowRate: ${this.valveService?.flowRate?.state}
+            ${this.valveService?.flowRate?.unitOfMeasurment}
+          </div>
+
+          <div class="status-item">
+            <pre class="debug">
 ${JSON.stringify(
-              {
-                timedEntity: {
-                  ...parsePythonDict(timedIrrigation?.state),
-                  changed: new Date(
-                    timedIrrigation?.last_changed ?? 0
-                  ).toLocaleString(),
-                  updated: new Date(
-                    timedIrrigation?.last_updated ?? 0
-                  ).toLocaleString(),
+                {
+                  timedEntity: {
+                    ...parsePythonDict(timedIrrigation?.state),
+                    changed: new Date(
+                      timedIrrigation?.last_changed ?? 0
+                    ).toLocaleString(),
+                    updated: new Date(
+                      timedIrrigation?.last_updated ?? 0
+                    ).toLocaleString(),
+                  },
+                  quantitativeEntity: {
+                    ...parsePythonDict(quantitativeIrrigation?.state),
+                    changed: new Date(
+                      quantitativeIrrigation?.last_changed ?? 0
+                    ).toLocaleString(),
+                    updated: new Date(
+                      quantitativeIrrigation?.last_updated ?? 0
+                    ).toLocaleString(),
+                  },
                 },
-                quantitativeEntity: {
-                  ...parsePythonDict(quantitativeIrrigation?.state),
-                  changed: new Date(
-                    quantitativeIrrigation?.last_changed ?? 0
-                  ).toLocaleString(),
-                  updated: new Date(
-                    quantitativeIrrigation?.last_updated ?? 0
-                  ).toLocaleString(),
-                },
-              },
-              null,
-              2
-            )}</pre
-          >
+                null,
+                2
+              )}</pre
+            >
+          </div>
         </div>
-      </div>
 
-      <div class="footer">
-        <!-- Future navigation items will go here -->
-      </div>
+        <div class="footer">
+          <!-- Future navigation items will go here -->
+        </div>
+      </sprinkle-light-theme>
     `;
   }
 

@@ -4,6 +4,7 @@
 import pjson from '../package.json';
 import { SprinkleCard } from './card';
 import { MoreInfoSprinkle } from './sprinkle-more-info';
+import { ConfigRegistry } from './services/SprinkleConfigRegistry';
 
 console.info(
   `%c  SPRINKLE  \n%c Version ${pjson.version} `,
@@ -21,6 +22,8 @@ window.customCards.push({
 
 export { SprinkleCard, MoreInfoSprinkle };
 
+// @ts-ignore
+window.sprinkleConfigStore = ConfigRegistry.getInstance();
 
 declare global {
   interface Window {

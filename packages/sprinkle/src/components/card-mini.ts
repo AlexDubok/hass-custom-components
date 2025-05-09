@@ -151,8 +151,8 @@ export class SprinkleCardMini extends LitElement {
     }
 
     .sprinkle-button.on {
-      border: 2px solid var(--color-blue);
-      color: var(--color-blue);
+      border: 2px solid var(--water-color);
+      color: var(--water-color);
     }
 
     .sprinkle-button.off {

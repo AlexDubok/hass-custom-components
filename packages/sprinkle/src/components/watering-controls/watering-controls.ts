@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import './watering-slider';
 import { Mode } from '../../types/config';
 import { customElement, property } from 'lit/decorators.js';
+import { fireHapticEvent } from '../../utils/fireEvent';
 
 @customElement('watering-controls')
 export class WateringControls extends LitElement {
@@ -14,6 +15,7 @@ export class WateringControls extends LitElement {
 
   handleToggleClick() {
     this.dispatchEvent(new CustomEvent('toggle-valve'));
+    fireHapticEvent('success');
   }
 
   handleDurationChange(e: CustomEvent) {
@@ -60,13 +62,23 @@ export class WateringControls extends LitElement {
     const statusText = this.isWatering
       ? 'Watering in progress...'
       : 'Tap to begin watering';
-
+      
+    // Icons for the button
+    const playIcon = html`<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 8px;">
+      <path fill="currentColor" d="M8 5v14l11-7z"/>
+    </svg>`;
+    
+    const stopIcon = html`<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 8px;">
+      <path fill="currentColor" d="M6 6h12v12H6z"/>
+    </svg>`;
+    
     return html`
       <div class="watering-controls">
         <button class="${buttonClass}" @click=${this.handleToggleClick}>
+          ${this.isWatering ? stopIcon : playIcon}
           <span>${buttonText}</span>
         </button>
-        <div class="control-text">${statusText}</div>
+        <div class="control-text ${this.isWatering ? 'active' : ''}">${statusText}</div>
 
         <div class="tabs">
           <div
@@ -122,25 +134,66 @@ export class WateringControls extends LitElement {
         justify-content: center;
       }
 
-      .control-text {
-        margin-block-end: 16px;
-      }
-
-      /* Your styles here */
       .control-button {
         width: 100%;
         max-width: 300px;
         padding: 20px;
         border-radius: 16px;
         background: white;
-        border: 2px solid var(--primary-color, #03a9f4);
+        border: 2px solid var(--primary-color, red);
+        color: var(--primary-color, red);
         cursor: pointer;
         text-align: center;
+        font-weight: bold;
+        font-size: 1.2em;
+        transition: transform 0.1s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
-      .control-buttonClass.active {
-        background-color: #4caf50;
+      .control-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .control-button.active {
+        background-color: var(--water-color, #f44336);
+        border-color: var(--water-color, #f44336);
         color: white;
+        box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+      }
+
+      .control-button.active::before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.4);
+        animation: water-flow 2s infinite linear;
+      }
+
+      @keyframes water-flow {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .control-text {
+        margin-block: 16px;
+        font-weight: 500;
+        color: var(--secondary-text-color, #727272);
+        transition: color 0.3s ease;
+      }
+
+      .control-text.active {
+        color: var(--water-color, #f44336);
+        font-weight: bold;
       }
 
       .tabs {
