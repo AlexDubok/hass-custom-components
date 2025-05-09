@@ -17,7 +17,6 @@ export function parsePythonDict(pythonDict: string = '{}'): any {
 
     return JSON.parse(jsonString);
   } catch (error) {
-    console.error('Error parsing Python dictionary:', error);
     return {};
   }
 }

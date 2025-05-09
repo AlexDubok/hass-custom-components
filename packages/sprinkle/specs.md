@@ -97,15 +97,15 @@ The card supports the following configuration options (single configuration poin
 
 ```yaml
 type: custom:sprinkle-card
-title: Balcony irrigation
-device_name: garden_water_valve
-valve_entity: switch.garden_water_valve
-battery_entity: sensor.garden_water_valve_battery
-flow_entity: sensor.garden_water_valve_flow
-device_status_entity: sensor.garden_water_valve_current_device_status
-auto_close_entity: switch.garden_water_valve_auto_close_when_water_shortage
-timed_irrigation_entity: sensor.garden_water_valve_cyclic_timed_irrigation
-quantitative_irrigation_entity: sensor.garden_water_valve_cyclic_quantitative_irrigation
+title: Smart Water System
+device_name: smart_water_valve
+valve_entity: switch.smart_water_valve
+battery_entity: sensor.smart_water_valve_battery
+flow_entity: sensor.smart_water_valve_flow
+device_status_entity: sensor.smart_water_valve_current_device_status
+auto_close_entity: switch.smart_water_valve_auto_close_when_water_shortage
+timed_irrigation_entity: sensor.smart_water_valve_cyclic_timed_irrigation
+quantitative_irrigation_entity: sensor.smart_water_valve_cyclic_quantitative_irrigation
 volume_max: 25  # Maximum volume in liters
 duration_max: 30 # Maximum duration in minutes
 ```

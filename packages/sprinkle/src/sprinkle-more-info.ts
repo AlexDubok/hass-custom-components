@@ -178,6 +178,7 @@ ${JSON.stringify(
       display: flex;
       justify-content: space-between;
       margin-block-end: 32px;
+      font-size: 16px;
     }
 
     .debug {

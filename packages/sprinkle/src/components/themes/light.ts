@@ -15,6 +15,10 @@ export class SprinkleLightTheme extends LitElement {
         --text-primary: rgba(0, 0, 0, 0.87);
         --text-secondary: rgba(0, 0, 0, 0.6);
       }
+
+      :host * {
+        box-sizing: border-box;
+      }
     `;
   }
 

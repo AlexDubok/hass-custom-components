@@ -3,6 +3,7 @@ import './watering-slider';
 import { Mode } from '../../types/config';
 import { customElement, property } from 'lit/decorators.js';
 import { fireHapticEvent } from '../../utils/fireEvent';
+import '../optimistic-switch-button';
 
 @customElement('watering-controls')
 export class WateringControls extends LitElement {
@@ -16,6 +17,17 @@ export class WateringControls extends LitElement {
   handleToggleClick() {
     this.dispatchEvent(new CustomEvent('toggle-valve'));
     fireHapticEvent('success');
+  }
+
+  handleToggleFailed(e: CustomEvent) {
+    this.dispatchEvent(
+      new CustomEvent('valve-toggle-failed', {
+        bubbles: true,
+        composed: true,
+        detail: { message: e.detail.message || 'Failed to switch valve state' },
+      })
+    );
+    fireHapticEvent('failure');
   }
 
   handleDurationChange(e: CustomEvent) {
@@ -55,30 +67,52 @@ export class WateringControls extends LitElement {
   }
 
   render() {
-    const buttonClass = this.isWatering
-      ? 'control-button active'
-      : 'control-button';
-    const buttonText = this.isWatering ? 'Stop Watering' : 'Start Watering';
     const statusText = this.isWatering
       ? 'Watering in progress...'
       : 'Tap to begin watering';
-      
+
     // Icons for the button
-    const playIcon = html`<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 8px;">
-      <path fill="currentColor" d="M8 5v14l11-7z"/>
+    const playIcon = html`<svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24"
+      width="24"
+      viewBox="0 0 24 24"
+      style="vertical-align: middle; margin-right: 8px;"
+    >
+      <path fill="currentColor" d="M8 5v14l11-7z" />
     </svg>`;
-    
-    const stopIcon = html`<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 8px;">
-      <path fill="currentColor" d="M6 6h12v12H6z"/>
+
+    const stopIcon = html`<svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24"
+      width="24"
+      viewBox="0 0 24 24"
+      style="vertical-align: middle; margin-right: 8px;"
+    >
+      <path fill="currentColor" d="M6 6h12v12H6z" />
     </svg>`;
-    
+
     return html`
       <div class="watering-controls">
-        <button class="${buttonClass}" @click=${this.handleToggleClick}>
-          ${this.isWatering ? stopIcon : playIcon}
-          <span>${buttonText}</span>
-        </button>
-        <div class="control-text ${this.isWatering ? 'active' : ''}">${statusText}</div>
+        <optimistic-switch-button
+          .state=${this.isWatering}
+          timeout="4000"
+          label="Toggle water valve"
+          @toggle=${this.handleToggleClick}
+          @toggle-failed=${this.handleToggleFailed}
+        >
+          <div class="control-button active" slot="on">
+            ${stopIcon}
+            <span>Stop Watering</span>
+          </div>
+          <div class="control-button" slot="off">
+            ${playIcon}
+            <span>Start Watering</span>
+          </div>
+        </optimistic-switch-button>
+        <div class="control-text ${this.isWatering ? 'active' : ''}">
+          ${statusText}
+        </div>
 
         <div class="tabs">
           <div
@@ -149,6 +183,7 @@ export class WateringControls extends LitElement {
         transition: transform 0.1s ease;
         position: relative;
         overflow: hidden;
+        margin-block-end: 16px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
@@ -165,7 +200,7 @@ export class WateringControls extends LitElement {
       }
 
       .control-button.active::before {
-        content: "";
+        content: '';
         position: absolute;
         bottom: 0;
         left: 0;
@@ -185,7 +220,7 @@ export class WateringControls extends LitElement {
       }
 
       .control-text {
-        margin-block: 16px;
+        margin-block-end: 32px;
         font-weight: 500;
         color: var(--secondary-text-color, #727272);
         transition: color 0.3s ease;
