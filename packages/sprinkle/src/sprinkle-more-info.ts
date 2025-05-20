@@ -6,6 +6,7 @@ import { HomeAssistantService } from './services/ha-service';
 import { ValveService } from './services/valve-service';
 import { ConfigRegistry } from './services/SprinkleConfigRegistry';
 import { parsePythonDict } from './utils/parsePythonDict';
+import './components/weather-display';
 
 /**
  * Custom More Info dialog for Sprinkle irrigation entities

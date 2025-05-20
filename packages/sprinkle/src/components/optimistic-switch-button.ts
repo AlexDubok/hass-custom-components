@@ -18,7 +18,7 @@ export class OptimisticButton extends LitElement {
   @property({ type: Boolean }) disabled = false;
   @property({ type: String }) label = 'Toggle';
 
-  @state() private optimisticState: boolean | null = null;
+  @state() public optimisticState: boolean | null = null;
 
   private timeoutId: number | null = null;
 

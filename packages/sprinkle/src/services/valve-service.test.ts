@@ -1,10 +1,11 @@
 import { ValveService } from './valve-service';
+import { Mocked } from 'vitest'
 import { HomeAssistantService } from './ha-service';
 import { SprinkleConfig } from '../types/config';
 import { HomeAssistant } from '../types/homeassistant';
 import { HassEntityAttributeBase, Context } from 'home-assistant-js-websocket';
 
-jest.mock('./ha-service');
+vi.mock('./ha-service');
 
 const mockEntity = (state: string): any => ({
   entity_id: 'switch.mock_valve',
@@ -17,7 +18,7 @@ const mockEntity = (state: string): any => ({
 
 describe('ValveService', () => {
   let valveService: ValveService;
-  let mockHaService: jest.Mocked<HomeAssistantService>;
+  let mockHaService: Mocked<HomeAssistantService>;
   const mockConfig: SprinkleConfig = {
     valve_entity: 'switch.mock_valve',
     device_name: 'mock_device',
@@ -26,7 +27,7 @@ describe('ValveService', () => {
   beforeEach(() => {
     mockHaService = new HomeAssistantService(
       {} as HomeAssistant
-    ) as jest.Mocked<HomeAssistantService>;
+    ) as Mocked<HomeAssistantService>;
     valveService = new ValveService(mockHaService, mockConfig);
   });
 
@@ -124,7 +125,7 @@ describe('ValveService', () => {
         'publish',
         {
           topic: 'zigbee2mqtt/mock_device/set',
-          duration: JSON.stringify({
+          payload: JSON.stringify({
             cyclic_timed_irrigation: {
               current_count: 1,
               total_number: 3,
@@ -150,7 +151,7 @@ describe('ValveService', () => {
         'publish',
         {
           topic: 'zigbee2mqtt/mock_device/set',
-          duration: JSON.stringify({
+          payload: JSON.stringify({
             cyclic_quantitative_irrigation: {
               current_count: 2,
               total_number: 4,

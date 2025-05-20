@@ -113,17 +113,6 @@ export class ValveService {
    * @returns A promise resolving the result of the MQTT publish call.
    */
   private startTimedWatering({durationSeconds, currentCount, irrigationInterval, totalNumber}: TimedWateringParams): Promise<any> {
-    console.log('start TimedWatering', {
-      topic: `zigbee2mqtt/${this.deviceName}/set`,
-      payload: JSON.stringify({
-        cyclic_timed_irrigation: {
-          current_count: currentCount || 0,
-          total_number: totalNumber || 1,
-          irrigation_duration: durationSeconds,
-          irrigation_interval: irrigationInterval || 0,
-        },
-      }),
-    });
     return this.haService.callService('mqtt', 'publish', {
       topic: `zigbee2mqtt/${this.deviceName}/set`,
       payload: JSON.stringify({
@@ -147,17 +136,6 @@ export class ValveService {
    * @returns A promise resolving the result of the MQTT publish call.
    */
   startVolumeBasedWatering({volumeLiters, currentCount, irrigationInterval, totalNumber}: VolumeBasedWateringParams): Promise<any> {
-    console.log('start VolumeBasedWatering', {
-      topic: `zigbee2mqtt/${this.deviceName}/set`,
-      payload: JSON.stringify({
-        cyclic_quantitative_irrigation: {
-          current_count: currentCount || 0,
-          total_number: totalNumber || 1,
-          irrigation_capacity: volumeLiters,
-          irrigation_interval: irrigationInterval || 0,
-        },
-      }),
-    });
     return this.haService.callService('mqtt', 'publish', {
       topic: `zigbee2mqtt/${this.deviceName}/set`,
       payload: JSON.stringify({

@@ -1,6 +1,5 @@
 import { LitElement, css, html } from 'lit';
 import './containers/watering-container';
-import './components/weather-display';
 import './components/card-mini';
 import './components/themes/light';
 import { HomeAssistant } from './types/homeassistant';
