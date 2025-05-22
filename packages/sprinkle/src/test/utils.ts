@@ -1,4 +1,4 @@
-const isDefinedPromise = (action: any) => typeof action === 'object' && Promise.resolve(action) === action;
+const isDefinedPromise = (action: unknown) => typeof action === 'object' && Promise.resolve(action) === action;
 
 export function nextFrame(): Promise<void> {
   return new Promise((resolve) => {
@@ -7,14 +7,14 @@ export function nextFrame(): Promise<void> {
 }
 export async function elementUpdated(el: HTMLElement) {
     let hasSpecificAwait = false;
-    // @ts-ignore
+    // @ts-expect-error Lit element
     let update = el && el.updateComplete;
     if (isDefinedPromise(update)) {
       await update;
       hasSpecificAwait = true;
     }
   
-    // @ts-ignore
+    // @ts-expect-error Lit element property
     update = el && el.componentOnReady ? el.componentOnReady() : false;
     if (isDefinedPromise(update)) {
       await update;
@@ -25,9 +25,7 @@ export async function elementUpdated(el: HTMLElement) {
       await nextFrame();
     }
   
-    // @ts-ignore
     if (window.ShadyDOM && typeof window.ShadyDOM.flush === 'function') {
-      // @ts-ignore
       window.ShadyDOM.flush();
     }
   

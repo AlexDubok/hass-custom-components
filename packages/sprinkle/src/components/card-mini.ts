@@ -196,8 +196,8 @@ export class SprinkleCardMini extends LitElement {
 declare global {
   // for fire event
   interface HASSDomEvents {
-    click: {};
-    'toggle-valve': {};
+    click: unknown;
+    'toggle-valve': unknown;
     'valve-toggle-failed': {
       message: string;
     };

@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ValveService } from './valve-service';
-import { Mocked } from 'vitest'
+import { Mocked } from 'vitest';
 import { HomeAssistantService } from './ha-service';
 import { SprinkleConfig } from '../types/config';
 import { HomeAssistant } from '../types/homeassistant';
-import { HassEntityAttributeBase, Context } from 'home-assistant-js-websocket';
+import { HassEntityAttributeBase, Context, HassEntity } from 'home-assistant-js-websocket';
 
 vi.mock('./ha-service');
 
-const mockEntity = (state: string): any => ({
+const mockEntity = (state: string): HassEntity => ({
   entity_id: 'switch.mock_valve',
   state,
   last_changed: new Date().toISOString(),
@@ -26,7 +27,7 @@ describe('ValveService', () => {
 
   beforeEach(() => {
     mockHaService = new HomeAssistantService(
-      {} as HomeAssistant
+      {} as HomeAssistant,
     ) as Mocked<HomeAssistantService>;
     valveService = new ValveService(mockHaService, mockConfig);
   });
@@ -43,7 +44,7 @@ describe('ValveService', () => {
     });
 
     it('should return false if the valve state is undefined', () => {
-      // @ts-expect-error
+      // @ts-expect-error mocking undefined state
       mockHaService.getEntityState.mockReturnValue(undefined);
       expect(valveService.isValveOn()).toBe(false);
     });
@@ -57,7 +58,7 @@ describe('ValveService', () => {
         'toggle',
         {
           entity_id: 'switch.mock_valve',
-        }
+        },
       );
     });
   });
@@ -70,7 +71,7 @@ describe('ValveService', () => {
         'turn_on',
         {
           entity_id: 'switch.mock_valve',
-        }
+        },
       );
     });
   });
@@ -83,7 +84,7 @@ describe('ValveService', () => {
         'turn_off',
         {
           entity_id: 'switch.mock_valve',
-        }
+        },
       );
     });
   });
@@ -133,7 +134,7 @@ describe('ValveService', () => {
               irrigation_interval: 600,
             },
           }),
-        }
+        },
       );
     });
   });
@@ -159,7 +160,7 @@ describe('ValveService', () => {
               irrigation_interval: 1200,
             },
           }),
-        }
+        },
       );
     });
   });

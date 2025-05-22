@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import '@webcomponents/webcomponentsjs/webcomponents-bundle.js';
 
 declare global {
-  var vi: typeof import('vitest').vi;
+  let vi: typeof import('vitest').vi;
 }
 
 // Make vi available globally - this helps with migration from jest
@@ -11,13 +11,12 @@ globalThis.vi = vi;
 
 
 // For compatibility with existing tests that use jest.fn(), jest.mock(), etc.
-// @ts-ignore
 globalThis.jest = {
-  // @ts-ignore
+  // @ts-expect-error jest is the best
   fn: vi.fn,
-  // @ts-ignore
+  // @ts-expect-error jest is the best
   mock: vi.mock,
-  // @ts-ignore
+  // @ts-expect-error jest is the best
   spyOn: vi.spyOn,
   Mocked: vi.mocked
 };

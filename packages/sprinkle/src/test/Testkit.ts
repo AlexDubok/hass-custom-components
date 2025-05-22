@@ -1,8 +1,9 @@
 import { LitElement } from 'lit';
+import { TemplateResult } from 'lit-html';
+
 import { BaseDriver } from './BaseDriver';
 import { fixture, cleanupFixtures } from './fixture';
 import { elementUpdated } from './utils';
-import { TemplateResult } from 'lit-html';
 
 export class LitTestKit<
   T extends LitElement,
@@ -18,7 +19,7 @@ export class LitTestKit<
         key,
         () =>
           new BaseDriver(this.el?.shadowRoot?.querySelector(selector) ?? null),
-      ])
+      ]),
     ) as Record<keyof S, () => BaseDriver>;
   }
 
@@ -32,6 +33,6 @@ export class LitTestKit<
   }
 
   reset() {
-    cleanupFixtures()
+    cleanupFixtures();
   }
 }

@@ -61,7 +61,7 @@ describe('HomeAssistantService', () => {
     });
 
     it('should throw an error if callService is not defined in HomeAssistant', () => {
-      mockHass.callService = undefined as any;
+      mockHass.callService = undefined as unknown as jest.Mocked<HomeAssistant>['callService'];
       const domain = 'switch';
       const service = 'toggle';
       const data = { entity_id: 'switch.mock_valve' };

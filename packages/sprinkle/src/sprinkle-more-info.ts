@@ -1,10 +1,11 @@
-import { SprinkleConfig } from './types/config';
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { HomeAssistant } from 'types/homeassistant';
+
 import { HomeAssistantService } from './services/ha-service';
-import { ValveService } from './services/valve-service';
 import { ConfigRegistry } from './services/SprinkleConfigRegistry';
+import { ValveService } from './services/valve-service';
+import { SprinkleConfig } from './types/config';
+import { HomeAssistant } from './types/homeassistant';
 import { parsePythonDict } from './utils/parsePythonDict';
 import './components/weather-display';
 
@@ -17,7 +18,7 @@ import './components/weather-display';
 export class MoreInfoSprinkle extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   // The entity state object provided by Home Assistant
-  @property({ attribute: false }) public stateObj?: any;
+  @property({ attribute: false }) public stateObj?: Record<string, string>;
 
   @state()
   haService: HomeAssistantService | null = null;
@@ -36,7 +37,7 @@ export class MoreInfoSprinkle extends LitElement {
     this.loadConfiguration();
   }
 
-  updated(changedProps: Map<string, any>) {
+  updated(changedProps: Map<string, unknown>) {
     if (changedProps.has('stateObj')) {
       this.loadConfiguration();
     }
@@ -109,24 +110,24 @@ ${JSON.stringify(
                   timedEntity: {
                     ...parsePythonDict(timedIrrigation?.state),
                     changed: new Date(
-                      timedIrrigation?.last_changed ?? 0
+                      timedIrrigation?.last_changed ?? 0,
                     ).toLocaleString(),
                     updated: new Date(
-                      timedIrrigation?.last_updated ?? 0
+                      timedIrrigation?.last_updated ?? 0,
                     ).toLocaleString(),
                   },
                   quantitativeEntity: {
                     ...parsePythonDict(quantitativeIrrigation?.state),
                     changed: new Date(
-                      quantitativeIrrigation?.last_changed ?? 0
+                      quantitativeIrrigation?.last_changed ?? 0,
                     ).toLocaleString(),
                     updated: new Date(
-                      quantitativeIrrigation?.last_updated ?? 0
+                      quantitativeIrrigation?.last_updated ?? 0,
                     ).toLocaleString(),
                   },
                 },
                 null,
-                2
+                2,
               )}</pre
             >
           </div>

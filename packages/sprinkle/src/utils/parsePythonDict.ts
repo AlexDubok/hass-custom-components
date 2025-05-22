@@ -3,7 +3,7 @@
  * @param pythonDict - String representation of a Python dictionary
  * @returns Parsed JavaScript object
  */
-export function parsePythonDict(pythonDict: string = '{}'): any {
+export function parsePythonDict(pythonDict = '{}'): Record<string, unknown> {
   if (!pythonDict) return {};
 
   try {
@@ -15,8 +15,9 @@ export function parsePythonDict(pythonDict: string = '{}'): any {
       .replace(/True/g, 'true')
       .replace(/False/g, 'false');
 
-    return JSON.parse(jsonString);
-  } catch (error) {
+    return JSON.parse(jsonString) as Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error: unknown) {
     return {};
   }
 }

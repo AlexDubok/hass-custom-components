@@ -16,7 +16,7 @@ export class SprinkleCard extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
   @property({ type: Boolean }) narrow?: boolean;
   @property({ attribute: false }) config?: SprinkleConfig;
-  @property({ attribute: false }) public stateObj?: any;
+  @property({ attribute: false }) public stateObj?: Record<string, string>;
 
   @state()
   haService: HomeAssistantService | null = null;
@@ -62,7 +62,7 @@ export class SprinkleCard extends LitElement {
     }
   }
 
-  updated(changedProps: Map<string, any>) {
+  updated(changedProps: Map<string, unknown>) {
     if ((changedProps.has('hass') || changedProps.has('config'))) {
       this.initializeServices();
     }

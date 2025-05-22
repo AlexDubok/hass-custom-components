@@ -27,7 +27,7 @@ export class OptimisticButton extends LitElement {
     this.clearTimeout();
   }
 
-  updated(changedProps: Map<string, any>) {
+  updated(changedProps: Map<string, unknown>) {
     super.updated(changedProps);
 
     // If the actual state changed, check if it matches our optimistic state
