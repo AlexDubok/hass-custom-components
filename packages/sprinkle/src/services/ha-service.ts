@@ -1,4 +1,4 @@
-import { HomeAssistant } from "../types/homeassistant";
+import { HomeAssistant } from '../types/homeassistant';
 
 // services/ha-service.ts
 export class HomeAssistantService {
@@ -8,7 +8,7 @@ export class HomeAssistantService {
       return this.hass.states[entityId] ?? {};
     }
     
-    callService(domain: string, service: string, data: any) {
+    callService(domain: string, service: string, data: Record<string, unknown> = {}) {
       return this.hass.callService(domain, service, data);
     }
   }

@@ -1,7 +1,8 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { fireEvent } from '../utils/fireEvent';
+import { fireEvent, fireHapticEvent } from '../utils/fireEvent';
 import { FlowRate } from '../services/valve-service';
+import './optimistic-switch-button';
 
 const iconWaterOn = html`<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -31,24 +32,54 @@ export class SprinkleCardMini extends LitElement {
   @property({ type: Object }) flowRate: FlowRate | null = null;
   @property({ type: Boolean }) isWaterRunning: boolean = false;
 
-  handleToggleValve(e: Event) {
-    e.stopPropagation();
+  handleToggleRequest() {
     fireEvent(this, 'toggle-valve');
+    fireHapticEvent('success');
+  }
+
+  handleToggleFailed(e: CustomEvent) {
+    this.dispatchEvent(
+      new CustomEvent('valve-toggle-failed', {
+        bubbles: true,
+        composed: true,
+        detail: { message: e.detail.message || 'Failed to switch valve state' },
+      })
+    );
+    fireHapticEvent('failure');
+  }
+
+  handleCardClick(e: Event) {
+    if (e.target !== e.currentTarget) {
+      e.stopPropagation();
+      return;
+    }
   }
 
   render() {
     return html`
       <ha-card .header=${this.title}>
-        <div class="sprinkle-status-card">
+        <div class="sprinkle-status-card" @click=${this.handleCardClick}>
           <div class="button-container">
-            <button
-              class="sprinkle-button ${this.isWaterRunning ? 'on' : 'off'}"
-              @click=${this.handleToggleValve}
+            <!-- Use the optimistic-switch-button component -->
+            <optimistic-switch-button
+              .state=${this.isWaterRunning}
+              timeout="4000"
+              label="Toggle water valve"
+              @toggle=${this.handleToggleRequest}
+              @toggle-failed=${this.handleToggleFailed}
             >
-              ${this.isWaterRunning ? iconWaterOn : iconWaterOff}
-              <div class="wave wave-1"></div>
-              <div class="wave wave-2"></div>
-            </button>
+              <!-- Content for "on" state -->
+              <span slot="on" class="sprinkle-button on">
+                ${iconWaterOn}
+                <div class="wave wave-1"></div>
+                <div class="wave wave-2"></div>
+              </span>
+
+              <!-- Content for "off" state -->
+              <span slot="off" class="sprinkle-button off">
+                ${iconWaterOff}
+              </span>
+            </optimistic-switch-button>
             <span>${this.valveSwitchState}</span>
           </div>
 
@@ -73,6 +104,9 @@ export class SprinkleCardMini extends LitElement {
   }
 
   static styles = css`
+    :host * {
+      box-sizing: border-box;
+    }
     .sprinkle-status-card {
       display: flex;
       align-items: center;
@@ -93,6 +127,7 @@ export class SprinkleCardMini extends LitElement {
       flex-shrink: 0;
       width: 64px;
       height: 64px;
+      display: flex;
       padding: 10px;
       background-color: var(--card-background-color, #ffffff);
       border-radius: 50%;
@@ -101,8 +136,8 @@ export class SprinkleCardMini extends LitElement {
     }
 
     .sprinkle-button.on {
-      border: 2px solid var(--color-blue);
-      color: var(--color-blue);
+      border: 2px solid var(--water-color);
+      color: var(--water-color);
     }
 
     .sprinkle-button.off {
@@ -161,7 +196,10 @@ export class SprinkleCardMini extends LitElement {
 declare global {
   // for fire event
   interface HASSDomEvents {
-    click: {};
-    'toggle-valve': {};
+    click: unknown;
+    'toggle-valve': unknown;
+    'valve-toggle-failed': {
+      message: string;
+    };
   }
 }

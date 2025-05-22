@@ -14,7 +14,7 @@ export class WeatherDisplay extends LitElement {
   render() {
     return html`
       <div class="weather-info">
-        <span>☀️ 19°C</span>
+        <!-- <span>☀️ 19°C</span> -->
       </div>
     `;
   }

@@ -1,39 +1,26 @@
-// components/watering-controls/watering-slider.ts
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { getTickValues } from './utils/slider';
+import { fireHapticEvent } from '../../utils/fireEvent';
 
 @customElement('watering-slider')
 export class WateringSlider extends LitElement {
-  private stepsCount = 6;
   @property({ type: Number }) min = 0;
   @property({ type: Number }) max = 60;
   @property({ type: Number }) value = 0;
   @property({ type: Number }) precision = 0.5;
-  @property({ type: String }) unit = 'minutes';
+  @property({ type: String }) unit = 'min';
   @property({ type: Boolean }) disabled = false;
-  
+
   @state() tickValues: number[] = [];
-
-  constructor() {
-    super();
-    this.updateTickValues();
+  
+  private sliderInput?: HTMLInputElement;
+  
+  firstUpdated() {
+    this.sliderInput = this.shadowRoot?.querySelector('input.range') as HTMLInputElement;
   }
-
-  updateTickValues() {
-    // const range = this.max - this.min;
-    // if (range % 6 === 0) {
-    //   this.tickValues = getTickValues(6, this.min, this.max);  
-    // }
-    // if (range % 5 === 0) {
-    //   this.tickValues = getTickValues(5, this.min, this.max);  
-    // }
-    this.tickValues = getTickValues(this.stepsCount, this.min, this.max);
-  }
-
+  
   handleSliderChange(e: Event) {
     const target = e.target as HTMLInputElement;
-    console.log(target.value);
     const newValue = parseFloat(target.value);
 
     this.value = newValue;
@@ -42,12 +29,65 @@ export class WateringSlider extends LitElement {
         detail: { value: newValue },
       })
     );
+    fireHapticEvent('selection');
   }
-
-  updated(changedProps: Map<string, any>) {
-    if (changedProps.has('min') || changedProps.has('max')) {
-      this.updateTickValues();
+  
+  handleTouchStart(e: TouchEvent) {
+    e.preventDefault(); // Prevent scrolling while touching the slider
+    
+    const touch = e.touches[0];
+    
+    const newValue = this.calculateValueFromTouch(touch);
+    
+    if (newValue !== undefined) {
+      this.sliderInput!.value = String(newValue);
+      
+      this.value = newValue;
+      
+      this.dispatchEvent(
+        new CustomEvent('value-change', {
+          detail: { value: newValue },
+        })
+      );
+      
+      fireHapticEvent('selection');
     }
+  }
+  
+  handleTouchMove(e: TouchEvent) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const newValue = this.calculateValueFromTouch(touch);
+    
+    if (newValue !== undefined && newValue !== this.value) {
+      this.sliderInput!.value = String(newValue);
+      this.value = newValue;
+      
+      this.dispatchEvent(
+        new CustomEvent('value-change', {
+          detail: { value: newValue },
+        })
+      );
+      fireHapticEvent('selection');
+    }
+  }
+  
+  handleTouchEnd() {
+    fireHapticEvent('light');
+  }
+  
+  calculateValueFromTouch(touch: Touch): number {
+    if (!this.sliderInput) return this.value;
+    
+    const rect = this.sliderInput.getBoundingClientRect();
+    
+    const percentage = (touch.clientX - rect.left) / rect.width;
+    const range = this.max - this.min;
+
+    const rawValue = this.min + percentage * range;
+    const steppedValue = Math.round(rawValue / this.precision) * this.precision;
+
+    return Math.max(this.min, Math.min(this.max, steppedValue));
   }
 
   render() {
@@ -55,27 +95,18 @@ export class WateringSlider extends LitElement {
       <div class="slider-container">
         <input
           type="range"
-          class="slider"
+          class="range ${this.value === this.min ? 'minimum' : ''}"
           min="${this.min}"
           max="${this.max}"
           step="${this.precision}"
           .value="${this.value.toString()}"
           ?disabled="${this.disabled}"
           @input="${this.handleSliderChange}"
+          @touchstart="${this.handleTouchStart}"
+          @touchmove="${this.handleTouchMove}"
+          @touchend="${this.handleTouchEnd}"
         />
-
-        <div class="tick-marks">
-          ${this.tickValues.map(
-            (tick) => html`
-              <div class="tick">
-                ${tick}
-              </div>
-            `
-          )}
-        </div>
       </div>
-
-      <div class="value-display">${this.value} ${this.unit}</div>
     `;
   }
 
@@ -83,96 +114,81 @@ export class WateringSlider extends LitElement {
     :host {
       display: block;
       width: 100%;
-      padding: 10px 0;
+      --input-size: 70px;
+      --range-border: transparent;
+      --range-bg: rgba(0, 0, 0, 0.1);
+      --thumb-bg: var(--water-color);
     }
 
     .slider-container {
       position: relative;
       width: 100%;
       margin: 20px 0;
+      touch-action: none; /* Prevent scrolling while interacting with slider */
     }
 
-    .slider {
-      -webkit-appearance: none;
+    .slider-container * {
+      user-select: none;
+    }
+
+    .range {
+      margin-top: 25px;
+      display: inline-block;
       width: 100%;
-      height: 8px;
-      border-radius: 4px;
-      background: #e0e0e0;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
+      height: var(--input-size);
       appearance: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #03a9f4;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      transition: all 0.2s;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      background-color: var(--range-bg);
+      outline: none;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 0 0 2px var(--range-border);
+      touch-action: none;
     }
 
-    .slider::-moz-range-thumb {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #03a9f4;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      transition: all 0.2s;
+    .range:focus,
+    .range:active {
+      background: var(--range-bg);
     }
 
-    .slider:disabled {
-      opacity: 0.5;
-    }
-
-    .slider:disabled::-webkit-slider-thumb {
-      background: #9e9e9e;
-      cursor: not-allowed;
-    }
-
-    .slider:disabled::-moz-range-thumb {
-      background: #9e9e9e;
-      cursor: not-allowed;
-    }
-
-    .tick-marks {
+    .range::-webkit-slider-thumb {
+      -webkit-appearance: none;
       position: relative;
-      width: 100%;
-      margin-top: 10px;
+      height: var(--input-size);
+      background: var(--range-bg);
+      outline: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: -500px 0 0 505px var(--thumb-bg);
+      border-radius: 2px;
+      width: 3px;
       height: 20px;
-      display: flex;
-      justify-content: space-between;
+      right: 5px;
     }
 
-    .tick {
+    .range::-moz-range-thumb {
+      -webkit-appearance: none;
       position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 1px;
-      color: #757575;
-      font-size: 12px;
+      height: var(--input-size);
+      background: var(--range-bg);
+      outline: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: -500px 0 0 505px var(--thumb-bg);
+      border-radius: 2px;
+      width: 3px;
+      height: 20px;
+      right: 5px;
     }
-
-    .tick::before {
-      content: '';
-      width: 1px;
-      height: 8px;
-      background-color: #bdbdbd;
-      margin-bottom: 4px;
+    
+    /* Make thumb transparent when at minimum value */
+    .range.minimum::-webkit-slider-thumb {
+      background: transparent;
     }
-
-    .value-display {
-      font-size: 24px;
-      font-weight: bold;
-      text-align: center;
-      margin: 16px 0;
-      color: #212121;
+    
+    .range.minimum::-moz-range-thumb {
+      background: transparent;
     }
   `;
 }

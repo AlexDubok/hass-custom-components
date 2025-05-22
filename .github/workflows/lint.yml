@@ -1,0 +1,35 @@
+name: Lint
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint code
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # Note: This step assumes you'll add ESLint to your project
+      # You'll need to add ESLint and configure it in your project
+      - name: Lint
+        run: |
+          echo "To enable linting, add ESLint to your project and update this workflow"
+          echo "Example: yarn add -D eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser"
+          echo "Then add a lint script to your package.json: \"lint\": \"eslint . --ext .ts,.js\""
+          echo "Finally, update this workflow to run: yarn lint"
+          exit 0  # Succeeds for now, replace with actual linting command later

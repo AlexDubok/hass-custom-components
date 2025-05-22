@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ValveService } from './valve-service';
+import { Mocked } from 'vitest';
 import { HomeAssistantService } from './ha-service';
 import { SprinkleConfig } from '../types/config';
 import { HomeAssistant } from '../types/homeassistant';
-import { HassEntityAttributeBase, Context } from 'home-assistant-js-websocket';
+import { HassEntityAttributeBase, Context, HassEntity } from 'home-assistant-js-websocket';
 
-jest.mock('./ha-service');
+vi.mock('./ha-service');
 
-const mockEntity = (state: string): any => ({
+const mockEntity = (state: string): HassEntity => ({
   entity_id: 'switch.mock_valve',
   state,
   last_changed: new Date().toISOString(),
@@ -17,7 +19,7 @@ const mockEntity = (state: string): any => ({
 
 describe('ValveService', () => {
   let valveService: ValveService;
-  let mockHaService: jest.Mocked<HomeAssistantService>;
+  let mockHaService: Mocked<HomeAssistantService>;
   const mockConfig: SprinkleConfig = {
     valve_entity: 'switch.mock_valve',
     device_name: 'mock_device',
@@ -25,8 +27,8 @@ describe('ValveService', () => {
 
   beforeEach(() => {
     mockHaService = new HomeAssistantService(
-      {} as HomeAssistant
-    ) as jest.Mocked<HomeAssistantService>;
+      {} as HomeAssistant,
+    ) as Mocked<HomeAssistantService>;
     valveService = new ValveService(mockHaService, mockConfig);
   });
 
@@ -42,7 +44,7 @@ describe('ValveService', () => {
     });
 
     it('should return false if the valve state is undefined', () => {
-      // @ts-expect-error
+      // @ts-expect-error mocking undefined state
       mockHaService.getEntityState.mockReturnValue(undefined);
       expect(valveService.isValveOn()).toBe(false);
     });
@@ -56,7 +58,7 @@ describe('ValveService', () => {
         'toggle',
         {
           entity_id: 'switch.mock_valve',
-        }
+        },
       );
     });
   });
@@ -69,7 +71,7 @@ describe('ValveService', () => {
         'turn_on',
         {
           entity_id: 'switch.mock_valve',
-        }
+        },
       );
     });
   });
@@ -82,7 +84,7 @@ describe('ValveService', () => {
         'turn_off',
         {
           entity_id: 'switch.mock_valve',
-        }
+        },
       );
     });
   });
@@ -124,7 +126,7 @@ describe('ValveService', () => {
         'publish',
         {
           topic: 'zigbee2mqtt/mock_device/set',
-          duration: JSON.stringify({
+          payload: JSON.stringify({
             cyclic_timed_irrigation: {
               current_count: 1,
               total_number: 3,
@@ -132,7 +134,7 @@ describe('ValveService', () => {
               irrigation_interval: 600,
             },
           }),
-        }
+        },
       );
     });
   });
@@ -150,7 +152,7 @@ describe('ValveService', () => {
         'publish',
         {
           topic: 'zigbee2mqtt/mock_device/set',
-          duration: JSON.stringify({
+          payload: JSON.stringify({
             cyclic_quantitative_irrigation: {
               current_count: 2,
               total_number: 4,
@@ -158,7 +160,7 @@ describe('ValveService', () => {
               irrigation_interval: 1200,
             },
           }),
-        }
+        },
       );
     });
   });

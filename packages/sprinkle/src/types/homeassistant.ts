@@ -23,8 +23,8 @@ import {
   export interface DeviceRegistryEntry {
     id: string;
     config_entries: string[];
-    connections: Array<[string, string]>;
-    identifiers: Array<[string, string]>;
+    connections: [string, string][];
+    identifiers: [string, string][];
     manufacturer: string | null;
     model: string | null;
     name: string | null;
@@ -58,7 +58,7 @@ import {
     accentColor?: string;
   }
   
-  export interface PanelInfo<T = Record<string, any> | null> {
+  export interface PanelInfo<T = Record<string, unknown> | null> {
     component_name: string;
     config: T;
     icon: string | null;
@@ -66,13 +66,9 @@ import {
     url_path: string;
   }
   
-  export interface Panels {
-    [name: string]: PanelInfo;
-  }
+  export type Panels = Record<string, PanelInfo>;
   
-  export interface Resources {
-    [language: string]: Record<string, string>;
-  }
+  export type Resources = Record<string, Record<string, string>>;
   
   export interface Translation {
     nativeName: string;
@@ -82,9 +78,7 @@ import {
   
   export interface TranslationMetadata {
     fragments: string[];
-    translations: {
-      [lang: string]: Translation;
-    };
+    translations: Record<string, Translation>;
   }
   
   export interface Credential {
@@ -110,7 +104,7 @@ import {
   export interface ServiceCallRequest {
     domain: string;
     service: string;
-    serviceData?: Record<string, any>;
+    serviceData?: Record<string, unknown>;
     target?: HassServiceTarget;
   }
   
@@ -129,9 +123,9 @@ import {
     connection: Connection;
     connected: boolean;
     states: HassEntities;
-    entities: { [id: string]: EntityRegistryDisplayEntry };
-    devices: { [id: string]: DeviceRegistryEntry };
-    areas: { [id: string]: AreaRegistryEntry };
+    entities: Record<string, EntityRegistryDisplayEntry>;
+    devices: Record<string, DeviceRegistryEntry>;
+    areas: Record<string, AreaRegistryEntry>;
     services: HassServices;
     config: HassConfig;
     themes: Themes;
@@ -158,7 +152,7 @@ import {
     defaultPanel: string;
     moreInfoEntityId: string | null;
     user?: CurrentUser;
-    hassUrl(path?: any): string;
+    hassUrl(path?: string): string;
     callService(
       domain: ServiceCallRequest['domain'],
       service: ServiceCallRequest['service'],
@@ -168,10 +162,10 @@ import {
     callApi<T>(
       method: 'GET' | 'POST' | 'PUT' | 'DELETE',
       path: string,
-      parameters?: Record<string, any>,
+      parameters?: Record<string, unknown>,
       headers?: Record<string, string>,
     ): Promise<T>;
-    fetchWithAuth(path: string, init?: Record<string, any>): Promise<Response>;
+    fetchWithAuth(path: string, init?: Record<string, unknown>): Promise<Response>;
     sendWS(msg: MessageBase): void;
     callWS<T>(msg: MessageBase): Promise<T>;
     loadBackendTranslation(
@@ -252,7 +246,7 @@ import {
     | 'issues'
     | 'selector';
   
-  export type LocalizeFunc = (key: string, ...args: any[]) => string;
+  export type LocalizeFunc = (key: string, ...args: unknown[]) => string;
   
   export interface ThemeVars {
     // Incomplete

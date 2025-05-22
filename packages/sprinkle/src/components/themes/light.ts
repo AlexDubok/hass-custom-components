@@ -5,10 +5,19 @@ import { customElement } from 'lit/decorators.js';
 export class SprinkleLightTheme extends LitElement {
   static get styles() {
     return css`
-      :host { 
-        --color-blue: #215df3;
+      :host {
         --color-green: #4caf50;
+        --water-color: #0870f8;
+        --primary-color: #03a9f4;
         --color-gray: #808080;
+        --error-color: #f44336;
+        --secondary-color: #4caf50;
+        --text-primary: rgba(0, 0, 0, 0.87);
+        --text-secondary: rgba(0, 0, 0, 0.6);
+      }
+
+      :host * {
+        box-sizing: border-box;
       }
     `;
   }
