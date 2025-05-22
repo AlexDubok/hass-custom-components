@@ -9,7 +9,11 @@
   "author": "Oleksii Dubok",
   "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "yarn workspaces foreach --all run test",
+    "test:coverage": "yarn workspaces foreach --all run test:coverage",
+    "build": "yarn workspaces foreach --all run build",
+    "type-check": "yarn workspaces foreach --all run type-check",
+    "lint": "yarn workspaces foreach --all run lint"
   },
   "packageManager": "yarn@4.9.1"
 }
