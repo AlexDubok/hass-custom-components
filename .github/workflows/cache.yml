@@ -1,0 +1,39 @@
+name: Cache Dependencies
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'package.json'
+      - 'yarn.lock'
+      - '.yarnrc.yml'
+      - 'packages/*/package.json'
+  workflow_dispatch:
+
+jobs:
+  cache:
+    name: Cache Yarn dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .yarn/cache
+            **/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
