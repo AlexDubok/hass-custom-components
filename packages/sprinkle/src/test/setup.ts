@@ -6,7 +6,7 @@ declare global {
   let vi: typeof import('vitest').vi;
 }
 
-// Make vi available globally - this helps with migration from jest
+// @ts-expect-error Make vi available globally - this helps with migration from jest
 globalThis.vi = vi;
 
 

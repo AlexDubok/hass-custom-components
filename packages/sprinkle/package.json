@@ -24,6 +24,7 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.30",
     "@types/webpack": "^5.28.5",
+    "@vitest/coverage-v8": "^3.1.4",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "css-loader": "^6.10.0",
     "eslint": "^9.27.0",
