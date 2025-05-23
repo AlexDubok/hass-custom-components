@@ -9,6 +9,22 @@ import { HomeAssistant } from './types/homeassistant';
 import { parsePythonDict } from './utils/parsePythonDict';
 import './components/weather-display';
 
+export interface StateObjAttributes {
+  device_name?: string;
+  weather_entity?: string;
+  flow_entity?: string;
+  device_status_entity?: string;
+  timed_irrigation_entity?: string;
+  quantitative_irrigation_entity?: string;
+  volume_max?: number;
+  duration_max?: number;
+  battery_entity?: string;
+}
+export interface StateObj {
+  entity_id: string;
+  attributes: StateObjAttributes;
+}
+
 /**
  * Custom More Info dialog for Sprinkle irrigation entities
  *
@@ -18,7 +34,7 @@ import './components/weather-display';
 export class MoreInfoSprinkle extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   // The entity state object provided by Home Assistant
-  @property({ attribute: false }) public stateObj?: Record<string, string>;
+  @property({ attribute: false }) public stateObj?: StateObj;
 
   @state()
   haService: HomeAssistantService | null = null;
@@ -149,19 +165,19 @@ ${JSON.stringify(
       this.config = this.configRegistry.getConfig(entityId) || null;
     } else {
       // Fall back to entity attributes if not in the registry
-      const { attributes } = this.stateObj;
+      const attributes = this.stateObj.attributes;
       this.config = {
-        device_name: attributes?.device_name,
-        valve_entity: this.stateObj?.entity_id,
-        weather_entity: attributes?.weather_entity,
-        flow_entity: attributes?.flow_entity,
-        device_status_entity: attributes?.device_status_entity,
-        timed_irrigation_entity: attributes?.timed_irrigation_entity,
+        device_name: attributes?.device_name ?? '',
+        valve_entity: this.stateObj.entity_id ?? '',
+        weather_entity: attributes?.weather_entity ?? '',
+        flow_entity: attributes?.flow_entity ?? '',
+        device_status_entity: attributes?.device_status_entity ?? '',
+        timed_irrigation_entity: attributes?.timed_irrigation_entity ?? '',
         quantitative_irrigation_entity:
-          attributes?.quantitative_irrigation_entity,
+          attributes?.quantitative_irrigation_entity ?? '',
         volume_max: attributes?.volume_max,
         duration_max: attributes?.duration_max,
-        battery_entity: attributes?.battery_entity,
+        battery_entity: attributes?.battery_entity ?? '',
       };
     }
 
