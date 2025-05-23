@@ -1,4 +1,4 @@
-# Sprinkle - Smart Irrigation Card for Home Assistant
+# Sprinkle - Custom Home Assistant card for smart irrigation control with Sonoff Zigbee valve
 
 ## Overview
 Sprinkle is a custom Lovelace card for Home Assistant that provides an intuitive interface to control a Sonoff Zigbee smart-valve used for irrigation. It integrates seamlessly with Home Assistant to provide both basic and advanced irrigation control features.

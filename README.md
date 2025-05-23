@@ -8,7 +8,7 @@ This repository contains custom components for Home Assistant.
 - **Backend**: Home Assistant, managing device interactions, data retrieval, and automation.
 
 ## Packages
-- [Sprinkle](./packages/sprinkle/README.md): Smart water valve custom card for Home Assistant
+- [Sprinkle](./packages/sprinkle/README.md): Custom Home Assistant card for smart irrigation control with Sonoff Zigbee valve
 
 ## Development
 
