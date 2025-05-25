@@ -9,11 +9,10 @@ export class LitTestKit<
   T extends LitElement,
   S extends Record<string, string>
 > {
-  public el: T;
+  public el: T = null as unknown as T;
   public finders: Record<keyof S, () => BaseDriver>;
 
-  constructor(public tagname: keyof HTMLElementTagNameMap, private selectors?: S) {
-    this.el = document.createElement(this.tagname) as T;
+  constructor(private selectors?: S) {
     this.finders = Object.fromEntries(
       Object.entries(this.selectors ?? {}).map(([key, selector]) => [
         key,

@@ -9,7 +9,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       enabled: false, // Set to true to enable coverage by default
-      include: ['src/**/*.ts'],
+      include: ['**/*.ts'], // This will look in src/**/*.ts
+      exclude: [
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        'test/**',
+        'types/**',
+        '**/*.d.ts'
+      ],
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
     },

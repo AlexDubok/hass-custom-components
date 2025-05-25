@@ -40,9 +40,6 @@ export class OptimisticButton extends LitElement {
     }
   }
 
-  /**
-   * Handle button click
-   */
   private handleClick(e: Event) {
     e.stopPropagation();
     if (this.disabled) return;
@@ -79,9 +76,6 @@ export class OptimisticButton extends LitElement {
     }
   }
 
-  /**
-   * Get the current display state (optimistic or actual)
-   */
   private get displayState(): boolean {
     return this.optimisticState !== null ? this.optimisticState : this.state;
   }
