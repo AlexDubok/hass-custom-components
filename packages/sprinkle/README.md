@@ -22,7 +22,6 @@ Sprinkle is a custom Lovelace card for Home Assistant that provides an intuitive
 
 ## Installation
 
-### Prerequisites
 - Home Assistant (version 2024.12.0 or newer)
 - Sonoff Zigbee smart water valve configured in Home Assistant
 - Zigbee2MQTT integration (for advanced features)

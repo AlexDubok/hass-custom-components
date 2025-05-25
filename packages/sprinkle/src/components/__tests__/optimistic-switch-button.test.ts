@@ -1,12 +1,12 @@
-import { LitTestKit } from '../test/Testkit';
-import { elementUpdated } from '../test/utils';
+import { LitTestKit } from '../../test/Testkit';
+import { elementUpdated } from '../../test/utils';
 
-import './optimistic-switch-button';
-import { OptimisticButton } from './optimistic-switch-button';
+import '../optimistic-switch-button';
+import { OptimisticButton } from '../optimistic-switch-button';
 import { html } from 'lit';
 
 describe('OptimisticButton', () => {
-  const driver = new LitTestKit<OptimisticButton, {button: string}>('optimistic-switch-button', {
+  const driver = new LitTestKit<OptimisticButton, {button: string}>({
     button: '.optimistic-switch-button',
   });
 

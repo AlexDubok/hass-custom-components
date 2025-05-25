@@ -3,12 +3,12 @@
 ## Overview
 This repository contains custom components for Home Assistant.
 
+## Packages
+- [Sprinkle](./packages/sprinkle/README.md): Custom Home Assistant card for smart irrigation control with Sonoff Zigbee valve
+
 ## Technology Stack
 - **Frontend**: Built with the LitElement framework for modular and responsive web components.
 - **Backend**: Home Assistant, managing device interactions, data retrieval, and automation.
-
-## Packages
-- [Sprinkle](./packages/sprinkle/README.md): Custom Home Assistant card for smart irrigation control with Sonoff Zigbee valve
 
 ## Development
 
