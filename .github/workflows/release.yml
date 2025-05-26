@@ -1,53 +1,38 @@
 name: Release
-
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read 
 
 jobs:
   release:
-    name: Create Release
+    name: Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'yarn'
-
+          node-version: "lts/*"
       - name: Install dependencies
         run: yarn install --immutable
+      - name: Build changed packages
+        run: yarn workspaces foreach --since master run build
 
-      - name: Build
-        run: yarn build
-
-      - name: Create Release ZIP
+      - name: Zip dist folders of changed packages
         run: |
-          mkdir -p release
-          cd packages/sprinkle
-          zip -r ../../release/sprinkle.zip dist README.md LICENSE
+          yarn workspaces foreach --since master --topological-dev --no-private exec 'if [ -d dist ]; then zip -r dist.zip dist; fi'
 
-      - name: Generate changelog
-        id: changelog
-        uses: metcalfc/changelog-generator@v4.6.2
-        with:
-          myToken: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: release/sprinkle.zip
-          body: |
-            ## Changes
-            ${{ steps.changelog.outputs.changelog }}
-          draft: false
-          prerelease: false
+      - name: Release sprinkle package
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+        run: yarn workspaces foreach --since master run release
