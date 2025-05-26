@@ -2,7 +2,10 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 module.exports = {
+  mode: isProduction ? 'production' : 'development',
   entry: {
     sprinkle: './src/sprinkle.ts',
   },
@@ -42,10 +45,16 @@ module.exports = {
     },
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      template: './src/index.html',
-    }),
+   ...(isProduction ? [] : [
+      new HtmlWebpackPlugin({
+        template: './src/index.html',
+      })
+    ])
   ],
+  devtool: isProduction ? 'source-map' : 'eval-source-map',
+  optimization: {
+    minimize: isProduction,
+  },
   devServer: {
     static: './dist',
     port: 3000,
