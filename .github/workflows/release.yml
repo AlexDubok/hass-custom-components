@@ -26,13 +26,13 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build changed packages
-        run: yarn workspaces foreach --since master run build
+        run: yarn workspaces foreach --since run build
 
       - name: Zip dist folders of changed packages
         run: |
-          yarn workspaces foreach --since master --topological-dev --no-private exec 'if [ -d dist ]; then zip -r dist.zip dist; fi'
+          yarn workspaces foreach --since --topological-dev --no-private exec 'if [ -d dist ]; then zip -r dist.zip dist; fi'
 
       - name: Release sprinkle package
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
-        run: yarn workspaces foreach --since master run release
+        run: yarn workspaces foreach --since run release
