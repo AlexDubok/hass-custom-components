@@ -8,6 +8,7 @@ import { SprinkleConfig } from './types/config';
 import { HomeAssistant } from './types/homeassistant';
 import { parsePythonDict } from './utils/parsePythonDict';
 import './components/weather-display';
+import './components/battery-indicator';
 
 export interface StateObjAttributes {
   device_name?: string;
@@ -86,17 +87,15 @@ export class MoreInfoSprinkle extends LitElement {
       <sprinkle-light-theme>
         <div class="header">
           <h1 class="app-name">${this.config.title || 'Sprinkle'}</h1>
-          <div class="left-section">
-            <weather-display
-              .hass=${this.hass}
-              .entity=${this.config.weather_entity || ''}
-            ></weather-display>
-
-            <div class="battery-info">
-              🔋 ${this.valveService?.batteryLevel}%
-            </div>
+          <div class="battery-info">
+            <battery-indicator .batteryLevel="${Number(this.valveService?.batteryLevel)}"></battery-indicator>
           </div>
+            
         </div>
+        <weather-display
+          .hass=${this.hass}
+          .entity=${this.config.weather_entity || ''}
+        ></weather-display>
 
         <div class="main-content">
           <watering-container
@@ -192,20 +191,20 @@ ${JSON.stringify(
   }
 
   static styles = css`
-    .left-section {
-      display: flex;
-      justify-content: space-between;
-      margin-block-end: 32px;
-      font-size: 16px;
-    }
-
     .debug {
       width: 100%;
       overflow: scroll;
     }
 
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-block-end: 32px;
+    }
+
     .app-name {
-      margin-top: 0;
+      margin: 0;
       font-size: 1.5rem;
     }
   `;

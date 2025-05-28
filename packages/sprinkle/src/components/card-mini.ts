@@ -57,7 +57,16 @@ export class SprinkleCardMini extends LitElement {
 
   render() {
     return html`
-      <ha-card .header=${this.title}>
+      <ha-card>
+        <div class="header">
+          <div class="title">${this.title}</div>
+          <div class="battery">
+            <battery-indicator
+              .batteryLevel="${Number(this.batteryLevel)}"
+              size="small"
+            ></battery-indicator>
+          </div>
+        </div>
         <div class="sprinkle-status-card" @click=${this.handleCardClick}>
           <div class="button-container">
             <!-- Use the optimistic-switch-button component -->
@@ -84,14 +93,12 @@ export class SprinkleCardMini extends LitElement {
           </div>
 
           <div class="sprinkle-info">
-            ${this.batteryLevel &&
-            html`<div class="battery">
-              battery: <span>${this.batteryLevel}%</span>
-            </div>`}
+            <!-- ${this.batteryLevel &&
+            html`<div class="battery-container"></div>`} -->
             ${this.status &&
             html`<div class="status">status: <span>${this.status}</span></div>`}
             ${this.flowRate?.state &&
-            html`<div class="battery">
+            html`<div>
               flow rate:
               <span
                 >${this.flowRate.state} ${this.flowRate.unitOfMeasurment}</span
@@ -119,6 +126,27 @@ export class SprinkleCardMini extends LitElement {
       flex-direction: column;
       align-items: center;
       justify-content: center;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 8px 16px;
+    }
+
+    .title {
+      text-align: var(--ha-stack-title-text-align, start);
+      font-family: var(--ha-card-header-font-family, inherit);
+      font-size: var(--ha-card-header-font-size, 24px);
+      font-weight: 400;
+    }
+
+    .battery-container {
+      display: flex;
+      align-items: center;
+      justify-content: end;
     }
 
     .sprinkle-button {
