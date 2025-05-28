@@ -13,7 +13,7 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "release": "semantic-release"
+    "release": "semantic-release --ci --debug"
   },
   "types": "dist/index.d.ts",
   "dependencies": {
