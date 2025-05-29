@@ -16,8 +16,8 @@
       {
         "assets": [
           {
-            "path": "dist.zip",
-            "label": "Distribution zip"
+            "path": "dist/**/*",
+            "label": "Distribution files"
           }
         ]
       }
