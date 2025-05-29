@@ -28,9 +28,9 @@ jobs:
       - name: Build changed packages
         run: yarn workspaces foreach --all run build
 
-      - name: Zip dist folders of changed packages
-        run: |
-          yarn workspaces foreach --all --topological-dev --no-private exec 'if [ -d dist ]; then zip -r dist.zip dist; fi'
+      # - name: Zip dist folders of changed packages
+      #   run: |
+      #     yarn workspaces foreach --all --topological-dev --no-private exec 'if [ -d dist ]; then zip -r dist.zip dist; fi'
 
       - name: Release sprinkle package
         env:
