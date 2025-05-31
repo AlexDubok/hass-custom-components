@@ -4,6 +4,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistantService } from './services/ha-service';
 import { ConfigRegistry } from './services/SprinkleConfigRegistry';
 import { ValveService } from './services/valve-service';
+import { WeatherService } from './services/weather-service';
 import { SprinkleConfig } from './types/config';
 import { HomeAssistant } from './types/homeassistant';
 import { parsePythonDict } from './utils/parsePythonDict';
@@ -44,9 +45,11 @@ export class MoreInfoSprinkle extends LitElement {
   valveService: ValveService | null = null;
 
   @state()
+  weatherService: WeatherService | null = null;
+
+  @state()
   config: SprinkleConfig | null = null;
 
-  // Reference to the config registry
   private configRegistry = ConfigRegistry.getInstance();
 
   connectedCallback() {
@@ -66,8 +69,8 @@ export class MoreInfoSprinkle extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    // Cleanup any resources
     this.valveService = null;
+    this.weatherService = null;
     this.haService = null;
   }
 
@@ -188,6 +191,13 @@ ${JSON.stringify(
 
     this.haService = new HomeAssistantService(this.hass);
     this.valveService = new ValveService(this.haService, this.config);
+    
+    // Initialize weather service if weather entity is configured
+    if (this.config.weather_entity) {
+      this.weatherService = new WeatherService(this.haService, this.config);
+    } else {
+      this.weatherService = null;
+    }
   }
 
   static styles = css`
