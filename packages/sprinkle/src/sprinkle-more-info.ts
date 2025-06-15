@@ -110,45 +110,13 @@ export class MoreInfoSprinkle extends LitElement {
 
         <div class="status">
           <div class="status-record">
-            onOffState: ${this.valveService?.onOffState}
-          </div>
-          <div class="status-record">status: ${this.valveService?.status}</div>
-          <div class="status-record">
-            batteryLevel: ${this.valveService?.batteryLevel}
-          </div>
-          <div class="status-record">
             flowRate: ${this.valveService?.flowRate?.state}
             ${this.valveService?.flowRate?.unitOfMeasurment}
           </div>
-
-          <div class="status-item">
-            <pre class="debug">
-${JSON.stringify(
-                {
-                  timedEntity: {
-                    ...parsePythonDict(timedIrrigation?.state),
-                    changed: new Date(
-                      timedIrrigation?.last_changed ?? 0,
-                    ).toLocaleString(),
-                    updated: new Date(
-                      timedIrrigation?.last_updated ?? 0,
-                    ).toLocaleString(),
-                  },
-                  quantitativeEntity: {
-                    ...parsePythonDict(quantitativeIrrigation?.state),
-                    changed: new Date(
-                      quantitativeIrrigation?.last_changed ?? 0,
-                    ).toLocaleString(),
-                    updated: new Date(
-                      quantitativeIrrigation?.last_updated ?? 0,
-                    ).toLocaleString(),
-                  },
-                },
-                null,
-                2,
-              )}</pre
-            >
+          <div class="status-record">
+            onOffState: ${this.valveService?.onOffState}
           </div>
+          <div class="status-record">status: ${this.valveService?.status}</div>      
         </div>
 
         <div class="footer">
