@@ -1,7 +1,4 @@
 import { LitElement, css, html } from 'lit';
-import './containers/watering-container';
-import './components/card-mini';
-import './components/themes/light';
 import { HomeAssistant } from './types/homeassistant';
 import { SprinkleConfig } from './types/config';
 import { fireEvent } from './utils/fireEvent';
@@ -10,6 +7,9 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistantService } from './services/ha-service';
 import { ValveService } from './services/valve-service';
 import { ConfigRegistry } from './services/SprinkleConfigRegistry';
+import './containers/watering-container';
+import './components/card-mini';
+import './components/themes/light';
 
 @customElement('sprinkle-card')
 export class SprinkleCard extends LitElement {

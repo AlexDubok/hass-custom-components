@@ -93,11 +93,11 @@ export class MoreInfoSprinkle extends LitElement {
           <div class="battery-info">
             <battery-indicator .batteryLevel="${Number(this.valveService?.batteryLevel)}"></battery-indicator>
           </div>
-            
         </div>
+
         <weather-display
-          .hass=${this.hass}
-          .entity=${this.config.weather_entity || ''}
+          .haService=${this.haService}
+          .weatherService=${this.weatherService}
         ></weather-display>
 
         <div class="main-content">
@@ -194,7 +194,7 @@ ${JSON.stringify(
     
     // Initialize weather service if weather entity is configured
     if (this.config.weather_entity) {
-      this.weatherService = new WeatherService(this.haService, this.config);
+      this.weatherService = new WeatherService(this.haService, this.config.weather_entity);
     } else {
       this.weatherService = null;
     }

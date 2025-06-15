@@ -7,6 +7,7 @@ export interface SprinkleConfig {
     battery_entity?: string;
     flow_entity?: string;
     weather_entity?: string;
+    weather_provider?: 'metno' | 'openweathermap' | 'accuweather';
     device_status_entity?: string;
     auto_close_entity?: string;
     volume_max?: number;
