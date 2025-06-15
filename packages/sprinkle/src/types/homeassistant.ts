@@ -43,16 +43,9 @@ import {
     name: string;
     picture: string | null;
   }
-
-  // export interface HassConfigExtended extends HassConfig {
-  //   entity: 
-  // }
   
   export interface ThemeSettings {
     theme: string;
-    // Radio box selection for theme picker. Do not use in Lovelace rendering as
-    // it can be undefined == auto.
-    // Property hass.themes.darkMode carries effective current mode.
     dark?: boolean;
     primaryColor?: string;
     accentColor?: string;
@@ -133,14 +126,7 @@ import {
     selectedTheme: ThemeSettings | null;
     panels: Panels;
     panelUrl: string;
-    // i18n
-    // current effective language in that order:
-    //   - backend saved user selected language
-    //   - language in local app storage
-    //   - browser language
-    //   - english (en)
     language: string;
-    // local stored language, keep that name for backward compatibility
     selectedLanguage: string | null;
     locale: FrontendLocaleData;
     resources: Resources;

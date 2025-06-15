@@ -8,8 +8,8 @@ export default defineConfig({
     include: ['**/*.test.(ts|js)'],
     coverage: {
       provider: 'v8',
-      enabled: false, // Set to true to enable coverage by default
-      include: ['**/*.ts'], // This will look in src/**/*.ts
+      enabled: false,
+      include: ['**/*.ts'],
       exclude: [
         '**/*.test.ts',
         '**/*.spec.ts',

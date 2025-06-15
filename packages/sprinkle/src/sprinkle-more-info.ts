@@ -129,12 +129,10 @@ export class MoreInfoSprinkle extends LitElement {
   private loadConfiguration() {
     if (!this.stateObj) return;
 
-    // Try to get the config from the registry first using entity_id
     const entityId = this.stateObj.entity_id;
     if (this.configRegistry.hasConfig(entityId)) {
       this.config = this.configRegistry.getConfig(entityId) || null;
     } else {
-      // Fall back to entity attributes if not in the registry
       const attributes = this.stateObj.attributes;
       this.config = {
         device_name: attributes?.device_name ?? '',
@@ -160,7 +158,6 @@ export class MoreInfoSprinkle extends LitElement {
     this.haService = new HomeAssistantService(this.hass);
     this.valveService = new ValveService(this.haService, this.config);
     
-    // Initialize weather service if weather entity is configured
     if (this.config.weather_entity) {
       this.weatherService = new WeatherService(this.haService, this.config.weather_entity);
     } else {
