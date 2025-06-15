@@ -35,4 +35,4 @@ jobs:
       - name: Release sprinkle package
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
-        run: yarn workspaces foreach --all run release
+        run: NODE_ENV=production yarn workspaces foreach --all run release

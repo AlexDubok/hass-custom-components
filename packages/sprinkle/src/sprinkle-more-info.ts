@@ -7,7 +7,6 @@ import { ValveService } from './services/valve-service';
 import { WeatherService } from './services/weather-service';
 import { SprinkleConfig } from './types/config';
 import { HomeAssistant } from './types/homeassistant';
-import { parsePythonDict } from './utils/parsePythonDict';
 import './components/weather-display';
 import './components/battery-indicator';
 
@@ -82,9 +81,6 @@ export class MoreInfoSprinkle extends LitElement {
     if (!this.valveService || !this.haService) {
       return null;
     }
-
-    const timedIrrigation = this.valveService?.timedIrrigation;
-    const quantitativeIrrigation = this.valveService?.quantitativeIrrigation;
 
     return html`
       <sprinkle-light-theme>
