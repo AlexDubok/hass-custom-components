@@ -47,7 +47,7 @@ describe('HomeAssistantService', () => {
 
       haService.callService(domain, service, data);
 
-      expect(mockHass.callService).toHaveBeenCalledWith(domain, service, data);
+      expect(mockHass.callService).toHaveBeenCalledWith(domain, service, data, undefined, true, false);
     });
 
     it('should handle calls with empty data', () => {
@@ -57,7 +57,7 @@ describe('HomeAssistantService', () => {
 
       haService.callService(domain, service, data);
 
-      expect(mockHass.callService).toHaveBeenCalledWith(domain, service, data);
+      expect(mockHass.callService).toHaveBeenCalledWith(domain, service, data, undefined, true, false);
     });
 
     it('should throw an error if callService is not defined in HomeAssistant', () => {
