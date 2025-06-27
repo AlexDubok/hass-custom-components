@@ -13,7 +13,7 @@ import {
 import { getWeatherIcon } from '../../components/weather-display/weather-icons';
 
 export class MetNoAdapter extends WeatherAdapter {
-  private static readonly RAIN_CONDITIONS = ['rainy', 'pouring', 'snowy-rainy'];
+  public static readonly RAIN_CONDITIONS = ['rainy', 'pouring', 'snowy-rainy'];
 
   async getCurrentCondition(): Promise<WeatherCondition | null> {
     try {
@@ -92,45 +92,7 @@ export class MetNoAdapter extends WeatherAdapter {
     records: MetWeatherHistoryRecord[],
     now: Date
   ): RainHistory {
-    let totalRainMinutes = 0;
-    let lastRainTime: Date | undefined;
-    let isCurrentlyRaining = false;
-    // Process records chronologically
-    for (let i = 0; i < records.length; i++) {
-      const current = records[i];
-      const isRaining = this.isRainCondition(current.s);
-      const timestamp = new Date(current.lu);
-
-      if (isRaining) {
-        if (!isCurrentlyRaining) {
-          // Rain started
-          isCurrentlyRaining = true;
-        }
-
-        // Calculate duration until next record or now
-        const nextTimestamp =
-          i < records.length - 1 ? new Date(records[i + 1].lu) : now;
-
-        const durationMinutes =
-          (nextTimestamp.getTime() - timestamp.getTime()) / (1000 * 60);
-        totalRainMinutes += durationMinutes;
-      } else if (isCurrentlyRaining) {
-        // Rain just ended
-        isCurrentlyRaining = false;
-        lastRainTime = timestamp;
-      }
-    }
-
-    // If it was raining in the last record, set lastRainTime to now
-    if (isCurrentlyRaining) {
-      lastRainTime = now;
-    }
-
-    return {
-      totalRainHours: Math.round((totalRainMinutes / 60) * 10) / 10, // Round to 1 decimal
-      lastRainTime,
-      totalPrecipitation: 0, // Would need precipitation sensor for accurate mm
-    };
+    return calculateRainHistory(records, now);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -202,10 +164,6 @@ export class MetNoAdapter extends WeatherAdapter {
     };
   }
 
-  private isRainCondition(condition: string): boolean {
-    return MetNoAdapter.RAIN_CONDITIONS.includes(condition);
-  }
-
   private getIconForCondition(condition: string): string {
     return getWeatherIcon(condition);
   }
@@ -220,4 +178,54 @@ export class MetNoAdapter extends WeatherAdapter {
       return itemTime >= now && itemTime <= next24h;
     });
   }
+}
+
+function isRainCondition(condition: string): boolean {
+    return MetNoAdapter.RAIN_CONDITIONS.includes(condition);
+  }
+
+
+export const calculateRainHistory = (
+  records: MetWeatherHistoryRecord[],
+  now: Date,
+): RainHistory => {
+    let totalRainMinutes = 0;
+    let lastRainTime: Date | undefined;
+    let isCurrentlyRaining = false;
+    // Process records chronologically
+    for (let i = 0; i < records.length; i++) {
+      const current = records[i];
+      const isRaining = isRainCondition(current.s);
+      const timestamp = new Date(current.lu * 1000);
+
+      if (isRaining) {
+        if (!isCurrentlyRaining) {
+          // Rain started
+          isCurrentlyRaining = true;
+        }
+
+        // Calculate duration until next record or now
+        const nextTimestamp =
+          i < records.length - 1 ? new Date(records[i + 1].lu * 1000) : now;
+
+        const durationMinutes =
+          (nextTimestamp.getTime() - timestamp.getTime()) / (1000 * 60);
+        totalRainMinutes += durationMinutes;
+      } else if (isCurrentlyRaining) {
+        // Rain just ended
+        isCurrentlyRaining = false;
+        lastRainTime = timestamp;
+      }
+    }
+
+    // If it was raining in the last record, set lastRainTime to now
+    if (isCurrentlyRaining) {
+      lastRainTime = now;
+    }
+
+    return {
+      totalRainHours: Math.round((totalRainMinutes / 60) * 10) / 10, // Round to 1 decimal
+      lastRainTime,
+      totalPrecipitation: 0, // Would need precipitation sensor for accurate mm
+    };
 }
