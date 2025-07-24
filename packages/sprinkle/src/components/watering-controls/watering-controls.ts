@@ -8,6 +8,7 @@ import '../optimistic-switch-button';
 @customElement('watering-controls')
 export class WateringControls extends LitElement {
   @property({ type: Boolean }) isWatering = false;
+  @property({ type: Boolean }) isCountdownActive = false;
   @property({ type: Number }) duration = 0;
   @property({ type: Number }) volume = 0;
   @property({ type: String }) activeMode: Mode = 'duration';
@@ -129,32 +130,40 @@ export class WateringControls extends LitElement {
           </div>
         </div>
 
-        <div class="input-container">
-          <div class="value-display">
-            <span class="value-label">${this.currentValue.toFixed(1)}</span>
-            ${this.unit}
-          </div>
+        ${this.isCountdownActive
+          ? html`<div class="input-container">
+              <slot name="countdown"></slot>
+            </div>`
+          : html`
+              <div class="input-container">
+                <div class="value-display">
+                  <span class="value-label"
+                    >${this.currentValue.toFixed(1)}</span
+                  >
+                  ${this.unit}
+                </div>
 
-          ${this.isDuration
-            ? html`
-                <watering-slider
-                  min="0"
-                  max="${this.maxDuration}"
-                  value="${this.duration}"
-                  unit="minutes"
-                  @value-change=${this.handleDurationChange}
-                ></watering-slider>
-              `
-            : html`
-                <watering-slider
-                  min="0"
-                  max="${this.maxVolume}"
-                  value="${this.volume}"
-                  unit="liters"
-                  @value-change=${this.handleVolumeChange}
-                ></watering-slider>
-              `}
-        </div>
+                ${this.isDuration
+                  ? html`
+                      <watering-slider
+                        min="0"
+                        max="${this.maxDuration}"
+                        value="${this.duration}"
+                        unit="minutes"
+                        @value-change=${this.handleDurationChange}
+                      ></watering-slider>
+                    `
+                  : html`
+                      <watering-slider
+                        min="0"
+                        max="${this.maxVolume}"
+                        value="${this.volume}"
+                        unit="liters"
+                        @value-change=${this.handleVolumeChange}
+                      ></watering-slider>
+                    `}
+              </div>
+            `}
       </div>
     `;
   }
