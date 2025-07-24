@@ -40,8 +40,8 @@
     "typescript-eslint": "^8.36.0",
     "vite-node": "^3.2.4",
     "vitest": "^3.2.4",
-    "webpack": "^5.100.1",
+    "webpack": "^5.100.2",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^4.15.2"
+    "webpack-dev-server": "^5.2.2"
   }
 }
