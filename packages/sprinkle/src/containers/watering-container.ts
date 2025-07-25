@@ -78,11 +78,19 @@ export class WateringContainer extends LitElement {
 
   private updateCountdown(): void {
     if (this.valveService) {
-      this.countdown = this.valveService.getCountdownInfo();
-      this.isWatering = this.countdown.isActive;
-      // Stop monitoring if irrigation finished
-      if (!this.countdown.isActive && this.countdownInterval) {
-        this.stopCountdownMonitoring();
+      try {
+        const countdownInfo = this.valveService.getCountdownInfo();
+        if (countdownInfo) {
+          this.countdown = countdownInfo;
+          this.isWatering = this.countdown.isActive;
+          // Stop monitoring if irrigation finished
+          if (!this.countdown.isActive && this.countdownInterval) {
+            this.stopCountdownMonitoring();
+          }
+        }
+      } catch (error) {
+        console.warn('Error updating countdown:', error);
+        // Keep current state on error
       }
     }
   }
@@ -103,7 +111,7 @@ export class WateringContainer extends LitElement {
     return html`
       <watering-controls
         .isWatering=${this.isWatering}
-        .isCountdownActive=${this.countdown.isActive}
+        .isCountdownActive=${this.countdown?.isActive || false}
         .duration=${this.duration}
         .volume=${this.volume}
         .activeMode=${this.activeMode}
@@ -116,9 +124,9 @@ export class WateringContainer extends LitElement {
       >
         <watering-countdown
           slot="countdown"
-          .isActive=${this.countdown.isActive}
-          .formatted=${this.countdown.formatted}
-          .progress=${this.countdown.progress}
+          .isActive=${this.countdown?.isActive || false}
+          .formatted=${this.countdown?.formatted || '--:--'}
+          .progress=${this.countdown?.progress || 0}
         ></watering-countdown>
       
     </watering-controls>

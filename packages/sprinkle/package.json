@@ -1,6 +1,7 @@
 {
   "name": "sprinkle",
   "description": "Smart Irrigation Web App's sprinkle functionality",
+  "type": "module",
   "version": "0.2.0",
   "main": "dist/index.js",
   "scripts": {

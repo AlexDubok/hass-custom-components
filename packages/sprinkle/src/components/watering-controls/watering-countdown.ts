@@ -3,9 +3,9 @@ import { LitElement, html, css } from 'lit';
 
 @customElement('watering-countdown')
 export class WateringCountdown extends LitElement {
-  @property({type: String}) formatted?: '--:--'; 
-  @property({type: Number}) progress?: 0; 
-  @property({type: Boolean}) isActive?: boolean; 
+  @property({type: String}) formatted = '--:--'; 
+  @property({type: Number}) progress = 0; 
+  @property({type: Boolean}) isActive = false; 
 
   render() {
     if (!this.isActive) {

@@ -210,70 +210,123 @@ export class ValveService {
   }
 
    getCurrentCycleTimeRemaining(): number {
-    // Parse the irrigation data
-    const state = this.timedIrrigation?.state || '{}';
-    const data = parsePythonDict(state) as unknown as TimedIrrigationState;
-    
-    // Check if irrigation is active - BOTH conditions must be true:
-    // 1. current_count > 0 (irrigation cycle started)
-    // 2. valve state === "on"
-    if (!this.isValveOn() || data.current_count === 0 || data.total_number === 0) {
+    try {
+      // Parse the irrigation data
+      const state = this.timedIrrigation?.state || '{}';
+      const data = parsePythonDict(state) as unknown as TimedIrrigationState;
+      
+      // Validate data structure and ensure we have valid numbers
+      if (!data || 
+          typeof data.current_count !== 'number' || 
+          typeof data.total_number !== 'number' || 
+          typeof data.irrigation_duration !== 'number' ||
+          !Number.isFinite(data.current_count) ||
+          !Number.isFinite(data.total_number) ||
+          !Number.isFinite(data.irrigation_duration)) {
+        return 0;
+      }
+      
+      // Check if irrigation is active - BOTH conditions must be true:
+      // 1. current_count > 0 (irrigation cycle started)
+      // 2. valve state === "on"
+      if (!this.isValveOn() || data.current_count === 0 || data.total_number === 0) {
+        return 0;
+      }
+      
+      // Check if irrigation cycle is still running
+      const cyclesRemaining = data.total_number - data.current_count;
+      if (cyclesRemaining < 0 || data.irrigation_duration === 0) {
+        return 0;
+      }
+      
+      // Get the main valve entity to check when it turned on
+      const valveEntity = this.haService.getEntityState(this.valveEntity);
+      if (!valveEntity) {
+        return 0;
+      }
+      
+      // Use the valve's last_changed timestamp (when it turned on)
+      const valveLastChanged = valveEntity.last_changed;
+      if (!valveLastChanged) {
+        // Fallback: assume full duration if no timestamp
+        return data.irrigation_duration as number;
+      }
+      
+      // Calculate elapsed time since valve turned on
+      const now = Date.now();
+      const valveTurnedOnAt = new Date(valveLastChanged).getTime();
+      const elapsedSeconds = Math.floor((now - valveTurnedOnAt) / 1000);
+      
+      // Handle edge case where timestamp is in the future (invalid test setup)
+      if (elapsedSeconds < 0) {
+        return data.irrigation_duration;
+      }
+      
+      // Handle case where valve has been on longer than one cycle
+      // (in case of multiple cycles)
+      const elapsedInCurrentCycle = elapsedSeconds % data.irrigation_duration;
+      
+      // Time remaining in current cycle
+      const timeRemaining = data.irrigation_duration - elapsedInCurrentCycle;
+      
+      // If we've completed all cycles and time has elapsed, return 0
+      const totalElapsedCycles = Math.floor(elapsedSeconds / data.irrigation_duration);
+      if (totalElapsedCycles >= data.total_number) {
+        return 0;
+      }
+      
+      // Sanity check - if calculated remaining time is greater than duration,
+      // the valve probably just turned on
+      if (timeRemaining > data.irrigation_duration) {
+        return data.irrigation_duration;
+      }
+      
+      return Math.max(0, timeRemaining);
+    } catch (error) {
+      // Handle any parsing or calculation errors gracefully
       return 0;
     }
-    
-    // Check if irrigation cycle is still running
-    const cyclesRemaining = data.total_number - data.current_count;
-    if (cyclesRemaining < 0 || data.irrigation_duration === 0) {
-      return 0;
-    }
-    
-    // Get the main valve entity to check when it turned on
-    const valveEntity = this.haService.getEntityState(this.valveEntity);
-    // Use the valve's last_changed timestamp (when it turned on)
-    const valveLastChanged = valveEntity.last_changed;
-    if (!valveLastChanged) {
-      // Fallback: assume full duration if no timestamp
-      return data.irrigation_duration as number;
-    }
-    
-    // Calculate elapsed time since valve turned on
-    const now = Date.now();
-    const valveTurnedOnAt = new Date(valveLastChanged).getTime();
-    const elapsedSeconds = Math.floor((now - valveTurnedOnAt) / 1000);
-    
-    // Handle case where valve has been on longer than one cycle
-    // (in case of multiple cycles)
-    const elapsedInCurrentCycle = elapsedSeconds % data.irrigation_duration;
-    
-    // Time remaining in current cycle
-    const timeRemaining = data.irrigation_duration - elapsedInCurrentCycle;
-    
-    // Sanity check - if calculated remaining time is greater than duration,
-    // the valve probably just turned on
-    if (timeRemaining > data.irrigation_duration) {
-      return data.irrigation_duration;
-    }
-    
-    return Math.max(0, timeRemaining);
   }
 
   getCountdownInfo(): CountDown {
     const secondsRemaining = this.getCurrentCycleTimeRemaining();
-    const irrigationData = parsePythonDict(this.timedIrrigation?.state || '{}') as unknown as TimedIrrigationState;
+    
+    const irrigationState = this.timedIrrigation?.state || '{}';
+    const irrigationData = parsePythonDict(irrigationState) as unknown as TimedIrrigationState;
+    
+    // Check if the original state was invalid (parsePythonDict returns {} for invalid input)
+    // and the original state was not actually '{}'
+    const wasInvalidInput = irrigationState !== '{}' && 
+                           (!irrigationData || Object.keys(irrigationData).length === 0);
+    
+    if (wasInvalidInput) {
+      return {
+        secondsRemaining: 0,
+        totalDuration: NaN,
+        isActive: false,
+        progress: 0,
+        formatted: '--:--'
+      };
+    }
+    
+    // Validate irrigationData and provide safe defaults
+    const totalDuration = (irrigationData && typeof irrigationData.irrigation_duration === 'number' && Number.isFinite(irrigationData.irrigation_duration)) 
+      ? irrigationData.irrigation_duration 
+      : 0;
     
     return {
       secondsRemaining,
-      totalDuration: irrigationData.irrigation_duration,
+      totalDuration,
       isActive: secondsRemaining > 0,
-      progress: irrigationData.irrigation_duration > 0 
-        ? ((irrigationData.irrigation_duration - secondsRemaining) / irrigationData.irrigation_duration) * 100
+      progress: (secondsRemaining > 0 && totalDuration > 0)
+        ? ((totalDuration - secondsRemaining) / totalDuration) * 100
         : 0,
       formatted: this.formatTime(secondsRemaining)
     };
   }
 
   private formatTime(seconds: number): string {
-    if (seconds === 0) return '--:--';
+    if (seconds <= 0 || !Number.isFinite(seconds)) return '--:--';
     
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
