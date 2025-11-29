@@ -1,3 +1,4 @@
+import { Mocked } from 'vitest';
 import { LitTestKit } from '../../test/Testkit';
 import { elementUpdated } from '../../test/utils';
 import { html } from 'lit';
@@ -5,11 +6,15 @@ import { html } from 'lit';
 import '../watering-container';
 import { WateringContainer } from '../watering-container';
 import { ValveService, CountDown } from '../../services/valve-service';
-import { HomeAssistant } from '../../types/homeassistant';
+import { HomeAssistant, ServiceCallResponse } from '../../types/homeassistant';
 import { SprinkleConfig } from '../../types/config';
 
 // Mock ValveService
 vi.mock('../../services/valve-service');
+
+const mockServiceCallResponse: ServiceCallResponse = {
+  context: { id: 'test-context-id' },
+};
 
 describe('WateringContainer Timer Integration', () => {
   const driver = new LitTestKit<
@@ -23,7 +28,7 @@ describe('WateringContainer Timer Integration', () => {
     wateringCountdown: 'watering-countdown',
   });
 
-  let mockValveService: vi.Mocked<ValveService>;
+  let mockValveService: Mocked<ValveService>;
   let mockHass: HomeAssistant;
   let mockConfig: SprinkleConfig;
 
@@ -160,7 +165,7 @@ describe('WateringContainer Timer Integration', () => {
         isActive: false,
       });
 
-      const el = await driver.render(html`
+      await driver.render(html`
         <watering-container
           .valveService=${mockValveService}
           .hass=${mockHass}
@@ -223,7 +228,7 @@ describe('WateringContainer Timer Integration', () => {
         isActive: true,
       });
 
-      const el = await driver.render(html`
+      await driver.render(html`
         <watering-container
           .valveService=${mockValveService}
           .hass=${mockHass}
@@ -272,7 +277,7 @@ describe('WateringContainer Timer Integration', () => {
   describe('Timer Integration with Valve Operations', () => {
     it('should restart monitoring after starting timed watering', async () => {
       mockValveService.isValveOn.mockReturnValue(false);
-      mockValveService.startTimedWateringOnce.mockResolvedValue(undefined);
+      mockValveService.startTimedWateringOnce.mockResolvedValue(mockServiceCallResponse);
       mockValveService.getCountdownInfo.mockReturnValue({
         secondsRemaining: 0,
         totalDuration: 0,
@@ -304,7 +309,7 @@ describe('WateringContainer Timer Integration', () => {
 
     it('should restart monitoring after starting volume-based watering', async () => {
       mockValveService.isValveOn.mockReturnValue(false);
-      mockValveService.startVolumeBasedWateringOnce.mockResolvedValue(undefined);
+      mockValveService.startVolumeBasedWateringOnce.mockResolvedValue(mockServiceCallResponse);
       mockValveService.getCountdownInfo.mockReturnValue({
         secondsRemaining: 0,
         totalDuration: 0,
@@ -336,7 +341,7 @@ describe('WateringContainer Timer Integration', () => {
 
     it('should turn off valve when already watering', async () => {
       mockValveService.isValveOn.mockReturnValue(true);
-      mockValveService.turnValveOff.mockResolvedValue(undefined);
+      mockValveService.turnValveOff.mockResolvedValue(mockServiceCallResponse);
 
       const el = await driver.render(html`
         <watering-container
@@ -355,7 +360,7 @@ describe('WateringContainer Timer Integration', () => {
 
     it('should toggle valve when no duration/volume set', async () => {
       mockValveService.isValveOn.mockReturnValue(false);
-      mockValveService.toggleValve.mockResolvedValue(undefined);
+      mockValveService.toggleValve.mockResolvedValue(mockServiceCallResponse);
 
       const el = await driver.render(html`
         <watering-container

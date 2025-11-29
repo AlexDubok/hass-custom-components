@@ -6,6 +6,9 @@
   "workspaces": [
     "packages/*"
   ],
+  "resolutions": {
+    "node-forge": "^1.3.2"
+  },
   "author": "Oleksii Dubok",
   "license": "MIT",
   "scripts": {
