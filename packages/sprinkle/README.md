@@ -110,6 +110,7 @@ device_status_entity: sensor.garden_water_valve_current_device_status
 auto_close_entity: switch.garden_water_valve_auto_close_when_water_shortage
 timed_irrigation_entity: sensor.garden_water_valve_cyclic_timed_irrigation
 quantitative_irrigation_entity: sensor.garden_water_valve_cyclic_quantitative_irrigation
+timer_entity: timer.garden_watering
 volume_max: 25
 duration_max: 15
 weather_entity: weather.home
@@ -129,9 +130,46 @@ weather_entity: weather.home
 | `auto_close_entity` | string | No | - | Entity ID for auto-close when water shortage feature |
 | `timed_irrigation_entity` | string | No | - | Entity ID for duration-based irrigation sensor |
 | `quantitative_irrigation_entity` | string | No | - | Entity ID for volume-based irrigation sensor |
+| `timer_entity` | string | No | - | Entity ID of an HA `timer` helper backing the watering countdown (see below) |
 | `volume_max` | number | No | 50 | Maximum volume in liters (1-100) |
 | `duration_max` | number | No | 30 | Maximum duration in minutes (1-60) |
 | `weather_entity` | string | No | - | Entity ID for weather information display |
+
+### Persistent Watering Timer (`timer_entity`)
+
+When `timer_entity` points to a Home Assistant [timer helper](https://www.home-assistant.io/integrations/timer/), duration-based watering becomes a first-class HA entity:
+
+- starting a timed watering also starts the timer (`timer.start` with the chosen duration); stopping the valve cancels it
+- both the compact card and the more-info dialog show a countdown ticking from the timer's server-side `finishes_at` — every device stays in sync, and the countdown survives page reloads
+- the timer entity is available to automations and history like any other entity
+
+Define one timer per valve, e.g.:
+
+```yaml
+timer:
+  garden_watering:
+    name: Garden watering
+    restore: true
+```
+
+Recommended companion automation, so the timer is cancelled when the valve closes for any other reason (physical stop, Zigbee2MQTT schedule, another automation):
+
+```yaml
+automation:
+  - alias: Cancel garden watering timer when valve closes
+    triggers:
+      - trigger: state
+        entity_id: switch.garden_water_valve
+        to: "off"
+    actions:
+      - action: timer.cancel
+        target:
+          entity_id: timer.garden_watering
+```
+
+Notes:
+- the timer applies to **duration-based** watering started from the card; volume-based watering and externally-started runs don't start it (the more-info dialog still falls back to the computed countdown for external timed runs)
+- without `timer_entity`, the card behaves exactly as before
 
 ### Multiple Valve Setup
 
