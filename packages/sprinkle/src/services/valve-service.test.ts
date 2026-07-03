@@ -559,4 +559,254 @@ describe('ValveService', () => {
       expect(formatTime(3599)).toBe('59:59'); // Just under 60 minutes
     });
   });
+
+  describe('timer entity integration', () => {
+    const timerConfig: SprinkleConfig = {
+      valve_entity: 'switch.mock_valve',
+      device_name: 'mock_device',
+      timer_entity: 'timer.mock_watering',
+    };
+
+    const mockTimerEntity = (
+      state: string,
+      attributes: Record<string, unknown> = {}
+    ): HassEntity => ({
+      entity_id: 'timer.mock_watering',
+      state,
+      last_changed: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+      attributes: attributes as HassEntityAttributeBase,
+      context: {} as Context,
+    });
+
+    const mockStates = (valveState: string, timerEntity?: HassEntity) => {
+      mockHaService.getEntityState.mockImplementation((entity) => {
+        if (entity === 'switch.mock_valve') return mockEntity(valveState);
+        if (entity === 'timer.mock_watering') {
+          return (timerEntity ?? {}) as HassEntity; // {} mirrors getEntityState for a missing entity
+        }
+        return {} as HassEntity;
+      });
+    };
+
+    beforeEach(() => {
+      valveService = new ValveService(mockHaService, timerConfig);
+      mockHaService.callService.mockResolvedValue({} as any);
+    });
+
+    describe('startTimedWateringOnce', () => {
+      it('starts the HA timer with the watering duration', async () => {
+        mockStates('off');
+        await valveService.startTimedWateringOnce(90);
+        expect(mockHaService.callService).toHaveBeenCalledWith(
+          'timer',
+          'start',
+          {
+            entity_id: 'timer.mock_watering',
+            duration: 90,
+          }
+        );
+      });
+
+      it('does not call timer.start when timer_entity is not configured', async () => {
+        valveService = new ValveService(mockHaService, mockConfig);
+        await valveService.startTimedWateringOnce(90);
+        const timerCalls = mockHaService.callService.mock.calls.filter(
+          ([domain]) => domain === 'timer'
+        );
+        expect(timerCalls).toHaveLength(0);
+      });
+
+      it('still starts watering when timer.start fails', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        mockHaService.callService.mockImplementation((domain) =>
+          domain === 'timer'
+            ? Promise.reject(new Error('timer unavailable'))
+            : Promise.resolve({} as any)
+        );
+
+        await expect(valveService.startTimedWateringOnce(90)).resolves.toBeDefined();
+        expect(mockHaService.callService).toHaveBeenCalledWith(
+          'mqtt',
+          'publish',
+          expect.anything()
+        );
+        // let the fire-and-forget rejection settle
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(warnSpy).toHaveBeenCalled();
+        warnSpy.mockRestore();
+      });
+    });
+
+    describe('turnValveOff', () => {
+      it('cancels the timer after turning the valve off', async () => {
+        await valveService.turnValveOff();
+        expect(mockHaService.callService).toHaveBeenCalledWith(
+          'timer',
+          'cancel',
+          {
+            entity_id: 'timer.mock_watering',
+          }
+        );
+      });
+
+      it('does not call timer.cancel when timer_entity is not configured', async () => {
+        valveService = new ValveService(mockHaService, mockConfig);
+        await valveService.turnValveOff();
+        const timerCalls = mockHaService.callService.mock.calls.filter(
+          ([domain]) => domain === 'timer'
+        );
+        expect(timerCalls).toHaveLength(0);
+      });
+    });
+
+    describe('toggleValve', () => {
+      it('cancels the timer when toggling an open valve', async () => {
+        mockStates('on');
+        await valveService.toggleValve();
+        expect(mockHaService.callService).toHaveBeenCalledWith(
+          'timer',
+          'cancel',
+          {
+            entity_id: 'timer.mock_watering',
+          }
+        );
+      });
+
+      it('does not cancel the timer when toggling a closed valve', async () => {
+        mockStates('off');
+        await valveService.toggleValve();
+        const timerCalls = mockHaService.callService.mock.calls.filter(
+          ([domain]) => domain === 'timer'
+        );
+        expect(timerCalls).toHaveLength(0);
+      });
+    });
+
+    describe('getTimerCountdown', () => {
+      const activeAttributes = (secondsFromNow: number, duration = '0:01:30') => ({
+        finishes_at: new Date(Date.now() + secondsFromNow * 1000).toISOString(),
+        duration,
+      });
+
+      it('returns an active countdown computed from finishes_at', () => {
+        mockStates('on', mockTimerEntity('active', activeAttributes(45)));
+
+        const countdown = valveService.getTimerCountdown();
+        expect(countdown).not.toBeNull();
+        expect(countdown!.isActive).toBe(true);
+        expect(countdown!.secondsRemaining).toBeGreaterThanOrEqual(44);
+        expect(countdown!.secondsRemaining).toBeLessThanOrEqual(46);
+        expect(countdown!.totalDuration).toBe(90);
+        expect(countdown!.progress).toBeGreaterThan(45);
+        expect(countdown!.progress).toBeLessThan(55);
+        expect(countdown!.formatted).toMatch(/^00:4[4-6]$/);
+      });
+
+      it('returns null when timer_entity is not configured', () => {
+        valveService = new ValveService(mockHaService, mockConfig);
+        mockHaService.getEntityState.mockReturnValue(mockEntity('on'));
+        expect(valveService.getTimerCountdown()).toBeNull();
+      });
+
+      it('returns null when the timer entity is missing', () => {
+        mockStates('on', undefined);
+        expect(valveService.getTimerCountdown()).toBeNull();
+      });
+
+      it.each(['idle', 'paused', 'unavailable'])(
+        'returns null when the timer state is %s',
+        (state) => {
+          mockStates('on', mockTimerEntity(state, activeAttributes(45)));
+          expect(valveService.getTimerCountdown()).toBeNull();
+        }
+      );
+
+      it('returns null when the valve is off even if the timer is active', () => {
+        mockStates('off', mockTimerEntity('active', activeAttributes(45)));
+        expect(valveService.getTimerCountdown()).toBeNull();
+      });
+
+      it('returns null when finishes_at is missing (paused/idle shape)', () => {
+        mockStates('on', mockTimerEntity('active', { duration: '0:01:30' }));
+        expect(valveService.getTimerCountdown()).toBeNull();
+      });
+
+      it('returns null when finishes_at is in the past', () => {
+        mockStates('on', mockTimerEntity('active', activeAttributes(-5)));
+        expect(valveService.getTimerCountdown()).toBeNull();
+      });
+
+      it('returns null when finishes_at is malformed', () => {
+        mockStates(
+          'on',
+          mockTimerEntity('active', { finishes_at: 'not-a-date', duration: '0:01:30' })
+        );
+        expect(valveService.getTimerCountdown()).toBeNull();
+      });
+
+      it('stays active with progress 0 when duration is malformed', () => {
+        mockStates(
+          'on',
+          mockTimerEntity('active', {
+            finishes_at: new Date(Date.now() + 45000).toISOString(),
+            duration: 'garbage',
+          })
+        );
+
+        const countdown = valveService.getTimerCountdown();
+        expect(countdown).not.toBeNull();
+        expect(countdown!.isActive).toBe(true);
+        expect(countdown!.totalDuration).toBe(0);
+        expect(countdown!.progress).toBe(0);
+      });
+    });
+
+    describe('getCountdownInfo with timer entity', () => {
+      it('prefers the timer countdown when the timer is active', () => {
+        mockStates(
+          'on',
+          mockTimerEntity('active', {
+            finishes_at: new Date(Date.now() + 45000).toISOString(),
+            duration: '0:01:30',
+          })
+        );
+
+        const countdown = valveService.getCountdownInfo();
+        expect(countdown.isActive).toBe(true);
+        expect(countdown.totalDuration).toBe(90);
+      });
+
+      it('falls back to the legacy computed countdown when the timer is idle', () => {
+        // externally-started timed run: z2m reports a cycle, HA timer knows nothing
+        valveService = new ValveService(mockHaService, {
+          ...timerConfig,
+          timed_irrigation_entity: 'sensor.mock_timed_irrigation',
+        });
+
+        const valveLastChanged = new Date(Date.now() - 60000).toISOString();
+        mockHaService.getEntityState.mockImplementation((entity) => {
+          if (entity === 'switch.mock_valve') {
+            return { ...mockEntity('on'), last_changed: valveLastChanged };
+          }
+          if (entity === 'timer.mock_watering') return mockTimerEntity('idle');
+          if (entity === 'sensor.mock_timed_irrigation') {
+            return {
+              ...mockEntity('on'),
+              entity_id: 'sensor.mock_timed_irrigation',
+              state:
+                "{'current_count': 1, 'total_number': 1, 'irrigation_duration': 300, 'irrigation_interval': 0}",
+            };
+          }
+          return {} as HassEntity;
+        });
+
+        const countdown = valveService.getCountdownInfo();
+        expect(countdown.isActive).toBe(true);
+        expect(countdown.totalDuration).toBe(300);
+        expect(countdown.secondsRemaining).toBeGreaterThan(235);
+        expect(countdown.secondsRemaining).toBeLessThanOrEqual(240);
+      });
+    });
+  });
 });

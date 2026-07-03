@@ -1,7 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { fireEvent, fireHapticEvent } from '../utils/fireEvent';
-import { FlowRate } from '../services/valve-service';
+import { CountDown, FlowRate } from '../services/valve-service';
 import './optimistic-switch-button';
 
 const iconWaterOn = html`<svg
@@ -31,6 +31,7 @@ export class SprinkleCardMini extends LitElement {
   @property({ type: String }) batteryLevel: string = '';
   @property({ type: Object }) flowRate: FlowRate | null = null;
   @property({ type: Boolean }) isWaterRunning: boolean = false;
+  @property({ type: Object }) countdown: CountDown | null = null;
 
   handleToggleRequest() {
     fireEvent(this, 'toggle-valve');
@@ -89,7 +90,19 @@ export class SprinkleCardMini extends LitElement {
                 ${iconWaterOff}
               </span>
             </optimistic-switch-button>
-            <span>${this.valveSwitchState}</span>
+            ${this.countdown?.isActive
+              ? html`<div class="mini-countdown">
+                  <span class="mini-countdown-time"
+                    >⏱ ${this.countdown.formatted}</span
+                  >
+                  <div class="mini-progress">
+                    <div
+                      class="mini-progress-fill"
+                      style="width: ${this.countdown.progress}%"
+                    ></div>
+                  </div>
+                </div>`
+              : html`<span>${this.valveSwitchState}</span>`}
           </div>
 
           <div class="sprinkle-info">
@@ -216,6 +229,34 @@ export class SprinkleCardMini extends LitElement {
       100% {
         transform: rotate(360deg);
       }
+    }
+
+    .mini-countdown {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 68px;
+    }
+
+    .mini-countdown-time {
+      font-family: monospace;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .mini-progress {
+      width: 100%;
+      height: 3px;
+      background: var(--divider-color);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .mini-progress-fill {
+      height: 100%;
+      background: var(--primary-color);
+      transition: width 1s linear;
     }
   `;
 }
