@@ -5,7 +5,7 @@ import { fireEvent } from './utils/fireEvent';
 import { MoreInfoDialogParams } from './types/lovelace';
 import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistantService } from './services/ha-service';
-import { ValveService } from './services/valve-service';
+import { CountDown, ValveService } from './services/valve-service';
 import { ConfigRegistry } from './services/SprinkleConfigRegistry';
 import './containers/watering-container';
 import './components/card-mini';
@@ -24,7 +24,11 @@ export class SprinkleCard extends LitElement {
   @state()
   valveService: ValveService | null = null
 
+  @state()
+  countdown: CountDown | null = null;
+
   private configRegistry = ConfigRegistry.getInstance();
+  private countdownInterval?: number;
 
   setConfig(config: SprinkleConfig) {
     if (!config) {
@@ -52,19 +56,47 @@ export class SprinkleCard extends LitElement {
     }
     
     this.initializeServices();
+    this.updateCountdown();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    
+
     if (this.config?.valve_entity) {
       this.configRegistry.deleteConfig(this.config.valve_entity);
     }
+    this.stopCountdownTicking();
   }
 
   updated(changedProps: Map<string, unknown>) {
     if ((changedProps.has('hass') || changedProps.has('config'))) {
       this.initializeServices();
+      this.updateCountdown();
+    }
+  }
+
+  /**
+   * Refreshes the mini-card countdown from the HA timer entity and keeps a
+   * single 1s ticker running only while the countdown is active. Reads
+   * this.valveService fresh on every tick — services are recreated on every
+   * hass update.
+   */
+  private updateCountdown(): void {
+    this.countdown = this.valveService?.getTimerCountdown() ?? null;
+
+    if (this.countdown && this.countdownInterval === undefined) {
+      this.countdownInterval = window.setInterval(() => {
+        this.updateCountdown();
+      }, 1000);
+    } else if (!this.countdown) {
+      this.stopCountdownTicking();
+    }
+  }
+
+  private stopCountdownTicking(): void {
+    if (this.countdownInterval !== undefined) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = undefined;
     }
   }
 
@@ -113,6 +145,7 @@ export class SprinkleCard extends LitElement {
           .status="${statusEntity?.state ?? ''}"
           .batteryLevel="${batteryLevel}"
           .flowRate="${this.valveService?.flowRate ?? null}"
+          .countdown="${this.countdown}"
           @click="${this.handleShowMoreInfo}"
           @toggle-valve="${this.handleToggleValve}"
           @valve-toggle-failed="${this.handleToggleFailed}"

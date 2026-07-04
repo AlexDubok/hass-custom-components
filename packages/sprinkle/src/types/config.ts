@@ -14,6 +14,7 @@ export interface SprinkleConfig {
     duration_max?: number;
     timed_irrigation_entity?: string;
     quantitative_irrigation_entity?: string;
+    timer_entity?: string;
 }
 
 export type Mode = 'duration' | 'volume';

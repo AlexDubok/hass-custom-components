@@ -44,6 +44,7 @@ export class ValveService {
   private deviceName: string;
 
   public weatherEntity: string | undefined;
+  private timerEntity: string | undefined;
   private timedIrrigationEntity: string | undefined;
   private quantitativeIrrigationEntity: string | undefined;
   private batteryEntity: string | undefined;
@@ -54,6 +55,7 @@ export class ValveService {
     this.haService = haService;
     this.valveEntity = config.valve_entity;
     this.deviceName = config.device_name;
+    this.timerEntity = config.timer_entity;
     this.timedIrrigationEntity = config.timed_irrigation_entity;
     this.quantitativeIrrigationEntity = config.quantitative_irrigation_entity;
     this.batteryEntity = config.battery_entity;
@@ -104,6 +106,9 @@ export class ValveService {
   }
 
   toggleValve(): Promise<ServiceCallResponse> {
+    if (this.isValveOn()) {
+      this.cancelTimer();
+    }
     return this.haService.callService('switch', 'toggle', {
       entity_id: this.valveEntity,
     });
@@ -115,10 +120,39 @@ export class ValveService {
     });
   }
 
-  turnValveOff(): Promise<ServiceCallResponse> {
-    return this.haService.callService('switch', 'turn_off', {
+  async turnValveOff(): Promise<ServiceCallResponse> {
+    const result = await this.haService.callService('switch', 'turn_off', {
       entity_id: this.valveEntity,
     });
+    this.cancelTimer();
+    return result;
+  }
+
+  /**
+   * Starts the HA timer helper alongside a timed watering.
+   * Failure-safe: a timer error must never break watering itself.
+   */
+  private startTimer(durationSeconds: number): void {
+    if (!this.timerEntity) return;
+    this.haService
+      .callService('timer', 'start', {
+        entity_id: this.timerEntity,
+        duration: durationSeconds,
+      })
+      .catch((error) => {
+        console.warn('Failed to start watering timer:', error);
+      });
+  }
+
+  private cancelTimer(): void {
+    if (!this.timerEntity) return;
+    this.haService
+      .callService('timer', 'cancel', {
+        entity_id: this.timerEntity,
+      })
+      .catch((error) => {
+        console.warn('Failed to cancel watering timer:', error);
+      });
   }
 
   /**
@@ -127,14 +161,16 @@ export class ValveService {
    * @param durationSeconds - Duration of the irrigation in seconds (max: 86400).
    * @returns A promise resolving the result of the MQTT publish call.
    */
-  startTimedWateringOnce(
+  async startTimedWateringOnce(
     durationSeconds: number
   ): Promise<ServiceCallResponse> {
-    return this.startTimedWatering({
+    const result = await this.startTimedWatering({
       durationSeconds,
       currentCount: 0,
       totalNumber: 1,
     });
+    this.startTimer(durationSeconds);
+    return result;
   }
 
   /**
@@ -288,7 +324,64 @@ export class ValveService {
     }
   }
 
+  /**
+   * Countdown derived from the HA timer helper entity (`timer_entity`).
+   * Returns an active countdown, or null whenever the timer path does not
+   * apply: no timer_entity configured, entity missing/unavailable, timer not
+   * `active` (idle/paused), no finishes_at, valve off, or time already
+   * elapsed. Callers fall back to the legacy computed countdown on null, so
+   * externally-started timed runs (z2m schedule, physical button) keep
+   * their countdown.
+   */
+  getTimerCountdown(): CountDown | null {
+    if (!this.timerEntity) return null;
+
+    const timer = this.haService.getEntityState(this.timerEntity);
+    if (timer?.state !== 'active' || !this.isValveOn()) return null;
+
+    const finishesAt = timer.attributes?.finishes_at;
+    if (typeof finishesAt !== 'string') return null;
+
+    const finishesAtMs = Date.parse(finishesAt);
+    if (!Number.isFinite(finishesAtMs)) return null;
+
+    const secondsRemaining = Math.ceil((finishesAtMs - Date.now()) / 1000);
+    if (secondsRemaining <= 0) return null;
+
+    const totalDuration = this.parseDurationAttribute(timer.attributes?.duration);
+
+    return {
+      secondsRemaining,
+      totalDuration,
+      isActive: true,
+      progress: totalDuration > 0
+        ? Math.min(100, Math.max(0, ((totalDuration - secondsRemaining) / totalDuration) * 100))
+        : 0,
+      formatted: this.formatTime(secondsRemaining),
+    };
+  }
+
+  /** Parses the timer `duration` attribute ("H:MM:SS") into seconds; 0 if malformed. */
+  private parseDurationAttribute(duration: unknown): number {
+    if (typeof duration === 'number' && Number.isFinite(duration)) {
+      return duration;
+    }
+    if (typeof duration !== 'string' || duration === '') return 0;
+
+    const parts = duration.split(':').map(Number);
+    if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) {
+      return 0;
+    }
+    const [hours, minutes, seconds] = parts;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
   getCountdownInfo(): CountDown {
+    const timerCountdown = this.getTimerCountdown();
+    if (timerCountdown) {
+      return timerCountdown;
+    }
+
     const secondsRemaining = this.getCurrentCycleTimeRemaining();
     
     const irrigationState = this.timedIrrigation?.state || '{}';
